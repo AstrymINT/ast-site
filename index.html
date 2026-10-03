@@ -1,0 +1,2235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ASTRYM — OSINT toolkit</title>
+<meta name="description" content="ASTRYM — модульный OSINT-инструмент. 126 команд, 9 групп, 10 форматов экспорта. Граф связей, STIX/MISP/OpenCTI/XLSX/Obsidian. MIT.">
+<style>
+:root{
+  --bg:#0a0a0b; --bg-soft:#101013; --bg-raise:#16161a;
+  --border:#23232a; --border-hi:#2e2e38;
+  --fg:#e8e8ee; --fg-soft:#a0a0ac; --fg-mute:#6c6c78; --fg-faint:#44444c;
+  --acc-1:#a855f7; --acc-2:#60a5fa; --acc-soft:rgba(168,85,247,0.12);
+  --ok:#4ade80; --warn:#fbbf24; --err:#f87171;
+  --term-bg:#000; --term-fg:#c8c8d0; --term-green:#7ee787;
+  --term-purple:#c084fc; --term-blue:#79c0ff; --term-yellow:#f0c674;
+  --term-gray:#6c6c78;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --r-sm:6px; --r:10px;
+  --ease:cubic-bezier(0.22,1,0.36,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{background:var(--bg);color:var(--fg-soft);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:"";position:fixed;top:-300px;left:50%;transform:translateX(-50%);width:900px;height:600px;background:radial-gradient(ellipse at center,rgba(168,85,247,0.18) 0%,rgba(96,165,250,0.08) 40%,transparent 70%);filter:blur(60px);pointer-events:none;z-index:0}
+a{color:var(--acc-1);text-decoration:none;transition:color .15s var(--ease)}
+a:hover{color:var(--acc-2)}
+code,pre,kbd{font-family:var(--mono);font-size:.92em}
+.wrap{position:relative;max-width:1080px;margin:0 auto;padding:0 24px;z-index:1}
+
+.nav{position:sticky;top:0;z-index:100;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);background:rgba(10,10,11,.72);border-bottom:1px solid var(--border)}
+.nav-inner{max-width:1080px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:32px}
+.nav-brand{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:4px;color:var(--fg);text-transform:uppercase}
+.nav-brand svg{width:26px;height:26px;filter:drop-shadow(0 0 8px rgba(168,85,247,.5))}
+.nav-links{display:flex;gap:18px;margin-left:auto;font-size:12.5px;font-family:var(--mono);flex-wrap:wrap}
+.nav-links a{color:var(--fg-soft);letter-spacing:.3px}
+.nav-links a:hover{color:var(--fg)}
+
+.section,.hero{opacity:0;filter:blur(14px);transform:translateY(28px);transition:opacity .9s var(--ease),filter .9s var(--ease),transform .9s var(--ease);will-change:opacity,filter,transform}
+.section.in-view,.hero.in-view{opacity:1;filter:blur(0);transform:translateY(0)}
+@media (prefers-reduced-motion: reduce){.section,.hero{opacity:1!important;filter:none!important;transform:none!important;transition:none!important}}
+
+.hero{padding:110px 0 90px;position:relative}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border:1px solid var(--border-hi);border-radius:999px;font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--fg-soft);background:var(--bg-soft);margin-bottom:28px}
+.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.hero h1{font-family:var(--mono);font-size:clamp(38px,6.6vw,68px);line-height:1.05;letter-spacing:-2px;font-weight:700;margin-bottom:24px;color:var(--fg)}
+.hero h1 .grad{background:linear-gradient(100deg,var(--acc-1) 0%,var(--acc-2) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+.hero p.lead{font-size:18px;line-height:1.55;color:var(--fg-soft);max-width:680px;margin-bottom:36px}
+.hero-why{margin-top:40px;padding-top:28px;border-top:1px solid var(--border);max-width:720px}
+.hero-why h2{font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--fg-mute);margin-bottom:14px}
+.hero-why p{color:var(--fg-soft);font-size:14.5px;line-height:1.65;margin-bottom:10px}
+.hero-why p strong{color:var(--fg);font-weight:500}
+.hero-cta{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.install{display:inline-flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--r);font-family:var(--mono);font-size:13px;color:var(--fg)}
+.install:hover{border-color:var(--border-hi)}
+.install .prefix{color:var(--fg-mute)}
+.install .copy{margin-left:4px;padding:4px 8px;border-radius:5px;background:transparent;border:1px solid var(--border);color:var(--fg-mute);cursor:pointer;font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase}
+.install .copy:hover{color:var(--fg);border-color:var(--acc-1);background:var(--acc-soft)}
+
+.section{padding:72px 0;border-top:1px solid var(--border);position:relative}
+.section-head{display:flex;align-items:baseline;gap:16px;margin-bottom:40px;flex-wrap:wrap}
+.section-head .num{font-family:var(--mono);font-size:12px;color:var(--fg-faint);letter-spacing:2px}
+.section-head h2{font-family:var(--mono);font-size:26px;font-weight:600;letter-spacing:-.5px;color:var(--fg)}
+.section-head .meta{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--fg-mute)}
+.intro p{color:var(--fg-soft);max-width:760px;margin-bottom:16px}
+.intro p strong{color:var(--fg);font-weight:500}
+.intro code{background:var(--bg-soft);border:1px solid var(--border);padding:1px 6px;border-radius:4px;color:var(--acc-2);font-size:.85em}
+
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:32px}
+.feature{padding:20px;background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--r);transition:border-color .2s var(--ease),transform .2s var(--ease)}
+.feature:hover{border-color:var(--border-hi);transform:translateY(-2px)}
+.feature h3{font-family:var(--mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--acc-1);margin-bottom:8px}
+.feature p{font-size:13.5px;color:var(--fg-soft);line-height:1.55}
+
+.cmd-group{margin-bottom:32px}
+.cmd-group-head{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);padding-bottom:10px;margin-bottom:8px;border-bottom:1px solid var(--border)}
+.cmd{padding:14px 0;border-bottom:1px dashed var(--border);display:grid;grid-template-columns:240px 1fr;gap:24px;align-items:start}
+.cmd:last-child{border-bottom:none}
+.cmd:hover{background:rgba(255,255,255,.015)}
+.cmd-name{font-family:var(--mono);font-size:13px;color:var(--acc-2);font-weight:500}
+.cmd-name .args{color:var(--fg-mute);font-weight:400}
+.cmd-body{font-size:14px;color:var(--fg-soft)}
+.cmd-body .desc{margin-bottom:6px}
+.cmd-body .desc code{background:var(--bg-soft);border:1px solid var(--border);padding:0 5px;border-radius:3px;color:var(--acc-2);font-size:.88em}
+.cmd-body .ex{font-family:var(--mono);font-size:12px;color:var(--fg-mute);padding:6px 10px;background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--r-sm);display:inline-block;margin-top:4px;max-width:100%;overflow-x:auto;white-space:pre}
+.cmd-body .ex::before{content:"$ ";color:var(--acc-1)}
+
+.read-block{padding:20px 0;border-bottom:1px dashed var(--border)}
+.read-block:last-child{border-bottom:none}
+.read-block h3{font-family:var(--mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--acc-1);margin-bottom:8px}
+.read-block h3 code{text-transform:none;letter-spacing:0;color:var(--acc-2);background:var(--bg-soft);padding:0 5px;border-radius:3px;border:1px solid var(--border)}
+.read-block p{color:var(--fg-soft);font-size:14px;margin-bottom:8px;max-width:780px}
+.read-block ul{margin:8px 0 12px 20px;color:var(--fg-soft);font-size:13.5px}
+.read-block li{margin-bottom:4px}
+.read-block li code{background:var(--bg-soft);border:1px solid var(--border);padding:0 5px;border-radius:3px;color:var(--acc-2);font-size:.9em}
+.read-block li b{color:var(--fg);font-weight:600}
+.annot{margin-top:10px;padding:10px 14px;background:var(--bg-soft);border-left:3px solid var(--acc-1);border-radius:0 var(--r-sm) var(--r-sm) 0;font-size:13px;color:var(--fg-soft)}
+.annot strong{color:var(--acc-1);font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;display:block;margin-bottom:4px}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:16px 0 24px}
+.legend-item{padding:10px 14px;background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--r);font-family:var(--mono);font-size:12.5px;color:var(--fg-soft)}
+.legend-item b{display:block;margin-bottom:4px;font-weight:600;letter-spacing:.5px}
+
+.term{background:var(--term-bg);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;font-family:var(--mono);font-size:12.5px;line-height:1.65;margin-top:12px}
+.term-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#0f0f12;border-bottom:1px solid var(--border);font-size:11px;color:var(--fg-faint);letter-spacing:1px}
+.term-bar .dot3{display:flex;gap:5px}
+.term-bar .dot3 span{width:8px;height:8px;border-radius:50%;background:#2a2a30}
+.term-bar .title{margin-left:8px}
+.term-body{padding:14px 16px;color:var(--term-fg);overflow-x:auto;white-space:pre;font-family:var(--mono)}
+.term-body .g{color:var(--term-green)}
+.term-body .p{color:var(--term-purple)}
+.term-body .b{color:var(--term-blue)}
+.term-body .y{color:var(--term-yellow)}
+.term-body .d{color:var(--term-gray)}
+.term-body .w{color:#fff}
+.term-body .r{color:#ff7b72}
+
+.report-preview{margin:20px 0;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:var(--bg-soft)}
+.report-preview-bar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#0f0f12;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--fg-faint);letter-spacing:1px}
+.report-preview-bar .rl{color:var(--acc-1);font-weight:500}
+
+.html-report{padding:24px;background:#000}
+.html-report .h1{font-family:var(--mono);font-size:18px;color:var(--acc-1);margin-bottom:2px}
+.html-report .h2{font-family:var(--mono);font-size:15px;color:#fff;margin-bottom:14px;word-break:break-all}
+.html-report .card{border:1px solid #2a2a2a;background:#080808;margin:12px 0;padding:14px 18px}
+.html-report .ct{font-family:var(--mono);font-size:10.5px;color:#999;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.html-report table.kv{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px}
+.html-report table.kv tr{border-bottom:1px dashed #1a1a1a;border-left:3px solid #000}
+.html-report table.kv tr:last-child{border-bottom:none}
+.html-report table.kv tr.crit{border-left-color:#f87171}
+.html-report table.kv tr.imp{border-left-color:#fbbf24}
+.html-report table.kv tr.info{border-left-color:#4ade80}
+.html-report table.kv tr.junk{border-left-color:#333}
+.html-report table.kv tr.junk td{color:#666!important}
+.html-report table.kv td{padding:7px 10px;vertical-align:top;color:#fff!important}
+.html-report table.kv td:first-child{color:#888!important;width:34%;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;padding-right:12px}
+.html-report table.kv td:last-child{color:#fff!important;word-break:break-all}
+
+.xlsx-report{padding:0;background:#fff}
+.xlsx-report .xlsx-tabs{display:flex;background:#f0f0f0;border-bottom:1px solid #ccc;font-family:var(--sans);font-size:12px;color:#333}
+.xlsx-report .xlsx-tab{padding:8px 14px;border-right:1px solid #ddd;color:#555}
+.xlsx-report .xlsx-tab.active{background:#fff;font-weight:600;color:#7c3aed;border-bottom:2px solid #7c3aed}
+.xlsx-report table.xlsx{width:100%;border-collapse:collapse;font-family:var(--sans);font-size:12px;color:#222}
+.xlsx-report table.xlsx th{background:#a855f7;color:#fff;font-weight:600;padding:8px 12px;text-align:left;font-size:11px;letter-spacing:.5px;text-transform:uppercase}
+.xlsx-report table.xlsx td{padding:7px 12px;border-bottom:1px solid #eee;color:#222}
+.xlsx-report table.xlsx tr:nth-child(even) td{background:#fafafa}
+
+.obsidian-note{padding:22px 26px;background:#1a1a1e;color:#c0c0c6;font-size:14px;line-height:1.7}
+.obsidian-note .frontmatter{background:#141418;border-left:3px solid #7c3aed;padding:10px 14px;margin-bottom:18px;font-family:var(--mono);font-size:12px;color:#888;border-radius:0 6px 6px 0;white-space:pre-wrap}
+.obsidian-note .frontmatter .k{color:#a855f7}
+.obsidian-note .frontmatter .v{color:#c8c8d0}
+.obsidian-note h1{font-size:20px;font-weight:600;color:#fff;margin:14px 0 10px}
+.obsidian-note h2{font-size:15px;font-weight:600;color:#e0e0e6;margin:14px 0 8px}
+.obsidian-note p{color:#c0c0c6;margin:8px 0}
+.obsidian-note .wikilink{color:#c084fc;background:rgba(168,85,247,0.1);padding:1px 6px;border-radius:4px;font-family:var(--mono);font-size:13px}
+.obsidian-note code{background:#141418;color:#c084fc;padding:1px 6px;border-radius:4px;font-family:var(--mono);font-size:12.5px}
+.obsidian-note table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
+.obsidian-note th{text-align:left;color:#999;font-weight:500;padding:6px 10px;border-bottom:1px solid #2a2a30;font-size:11px;letter-spacing:1px;text-transform:uppercase}
+.obsidian-note td{padding:6px 10px;border-bottom:1px dashed #222228;color:#c0c0c6}
+
+.obs-steps{counter-reset:ob;margin:16px 0}
+.obs-step{position:relative;padding:14px 0 14px 44px;border-bottom:1px dashed var(--border)}
+.obs-step:last-child{border-bottom:none}
+.obs-step::before{counter-increment:ob;content:counter(ob);position:absolute;left:0;top:14px;width:28px;height:28px;line-height:28px;text-align:center;border-radius:50%;background:var(--acc-soft);color:var(--acc-1);font-family:var(--mono);font-size:12px;font-weight:600}
+.obs-step h4{font-size:14px;font-weight:500;margin-bottom:6px;color:var(--fg)}
+.obs-step h4 code{background:var(--bg-soft);border:1px solid var(--border);padding:0 5px;border-radius:3px;color:var(--acc-2);font-size:.9em}
+.obs-step p{font-size:13.5px;color:var(--fg-soft);margin-bottom:6px}
+.obs-step pre{background:var(--term-bg);border:1px solid var(--border);padding:10px 14px;border-radius:var(--r-sm);font-family:var(--mono);font-size:12px;overflow-x:auto;color:var(--term-fg);margin-top:6px}
+.obs-tree{background:var(--term-bg);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;font-family:var(--mono);font-size:12.5px;line-height:1.75;color:var(--term-fg);overflow-x:auto;margin:12px 0;white-space:pre}
+.obs-tree .dir{color:var(--term-blue)}
+.obs-tree .file{color:var(--term-fg)}
+.obs-tree .link{color:var(--term-purple)}
+.obs-tree .d{color:var(--term-gray)}
+
+.flags{width:100%;border-collapse:collapse;font-size:13.5px}
+.flags th{text-align:left;font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);padding:10px 12px;border-bottom:1px solid var(--border);font-weight:500}
+.flags td{padding:10px 12px;border-bottom:1px dashed var(--border);vertical-align:top;color:var(--fg-soft)}
+.flags tr:last-child td{border-bottom:none}
+.flags td:first-child{font-family:var(--mono);color:var(--acc-2);white-space:nowrap;width:220px}
+.flags td code{background:var(--bg-soft);border:1px solid var(--border);padding:0 5px;border-radius:3px;color:var(--acc-2);font-size:.88em}
+
+.release{padding:24px 0;border-bottom:1px dashed var(--border);display:grid;grid-template-columns:140px 1fr;gap:32px}
+.release:last-child{border-bottom:none}
+.rel-meta{font-family:var(--mono);font-size:12px}
+.rel-meta .tag{display:inline-block;padding:3px 8px;background:var(--acc-soft);color:var(--acc-1);border-radius:4px;letter-spacing:1px;margin-bottom:6px}
+.rel-meta .date{color:var(--fg-mute);font-size:11px}
+.rel-body h3{font-size:15px;font-weight:500;margin-bottom:10px;color:var(--fg)}
+.rel-body ul{list-style:none;font-size:13.5px;color:var(--fg-soft)}
+.rel-body li{padding-left:18px;position:relative;margin-bottom:4px}
+.rel-body li::before{content:"·";position:absolute;left:4px;color:var(--acc-1);font-weight:700}
+.rel-body li code{background:var(--bg-soft);border:1px solid var(--border);padding:0 5px;border-radius:3px;font-size:.85em;color:var(--acc-2)}
+
+.persist{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:20px}
+.persist-item{padding:14px 16px;background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--r);font-size:13px;color:var(--fg-soft);line-height:1.55}
+.persist-item code{color:var(--acc-2);font-size:12px;display:block;margin-bottom:6px;font-family:var(--mono);word-break:break-all}
+
+.roadmap{margin-top:20px}
+.rm-item{display:grid;grid-template-columns:90px 1fr;gap:20px;padding:14px 0;border-bottom:1px dashed var(--border);align-items:start}
+.rm-item:last-child{border-bottom:none}
+.rm-status{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:3px 8px;border-radius:4px;text-align:center;white-space:nowrap}
+.rm-status.done{background:rgba(74,222,128,0.12);color:var(--ok)}
+.rm-status.wip{background:rgba(251,191,36,0.12);color:var(--warn)}
+.rm-status.idea{background:rgba(96,165,250,0.12);color:var(--acc-2)}
+.rm-item h4{font-size:14px;font-weight:500;color:var(--fg);margin-bottom:4px}
+.rm-item p{font-size:13px;color:var(--fg-soft);line-height:1.55}
+.rm-item p code{background:var(--bg-soft);border:1px solid var(--border);padding:0 5px;border-radius:3px;color:var(--acc-2);font-size:.88em}
+
+.nope{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-top:20px}
+.nope-item{padding:16px;background:var(--bg-soft);border:1px solid var(--border);border-left:3px solid var(--err);border-radius:var(--r)}
+.nope-item h4{font-family:var(--mono);font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--err);margin-bottom:6px}
+.nope-item p{font-size:13px;color:var(--fg-soft);line-height:1.55}
+
+.deps{margin-top:20px;display:grid;grid-template-columns:1fr;gap:0}
+.dep{display:grid;grid-template-columns:200px 1fr;gap:20px;padding:12px 0;border-bottom:1px dashed var(--border);font-size:13.5px}
+.dep:last-child{border-bottom:none}
+.dep code{font-family:var(--mono);color:var(--acc-2);font-size:13px;word-break:break-word}
+.dep span{color:var(--fg-soft)}
+
+.archive-card{padding:24px;background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--r);margin-bottom:24px}
+.archive-card:hover{border-color:var(--border-hi)}
+.archive-head{display:flex;align-items:baseline;gap:16px;margin-bottom:6px;flex-wrap:wrap}
+.archive-ver{font-family:var(--mono);font-size:18px;font-weight:600;color:var(--acc-1)}
+.archive-date{font-family:var(--mono);font-size:11px;color:var(--fg-faint);letter-spacing:2px;text-transform:uppercase}
+.archive-desc{font-size:13.5px;color:var(--fg-soft);margin-bottom:12px;max-width:640px}
+.archive-desc code{background:var(--bg-raise);border:1px solid var(--border);padding:0 5px;border-radius:3px;font-size:.85em;color:var(--acc-2)}
+.archive-gain{margin:10px 0 18px;padding:12px 16px;border-left:3px solid var(--acc-1);background:rgba(168,85,247,0.06);border-radius:0 var(--r-sm) var(--r-sm) 0;font-size:13.5px;color:var(--fg-soft)}
+.archive-gain strong{color:var(--acc-1);font-weight:600;font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:4px}
+.arch-row{display:grid;grid-template-columns:1fr;gap:20px}
+@media (min-width:860px){.arch-row.two{grid-template-columns:1fr 1fr}}
+
+.evo{width:100%;border-collapse:collapse;font-size:13.5px;margin:20px 0}
+.evo th{text-align:left;font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);padding:10px 12px;border-bottom:1px solid var(--border);font-weight:500;white-space:nowrap}
+.evo td{padding:12px;border-bottom:1px dashed var(--border);vertical-align:top;color:var(--fg-soft)}
+.evo tr:last-child td{border-bottom:none}
+.evo td:first-child{font-family:var(--mono);color:var(--acc-1);font-weight:600;white-space:nowrap}
+.evo .bar{display:inline-block;height:6px;border-radius:3px;background:linear-gradient(90deg,var(--acc-1),var(--acc-2));vertical-align:middle;margin-right:8px;min-width:8px}
+
+.commit{background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;font-family:var(--mono);font-size:12.5px;line-height:1.7;margin-top:20px;color:var(--fg-soft)}
+.commit .hash{color:var(--term-yellow)}
+.commit .date{color:var(--fg-mute)}
+.commit .msg{color:var(--fg);font-weight:500}
+.commit .stat{color:var(--ok)}
+.commit .body{color:var(--fg-soft);padding-left:16px;margin-top:6px}
+.commit .body div{margin-bottom:2px}
+
+.code-block{background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;font-family:var(--mono);font-size:12.5px;line-height:1.7;color:var(--fg-soft);overflow-x:auto}
+.code-block .c{color:var(--fg-mute);font-style:italic}
+
+footer{padding:60px 0 40px;border-top:1px solid var(--border);font-family:var(--mono);font-size:12px;color:var(--fg-mute)}
+footer .row{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}
+footer a{color:var(--fg-soft)}
+footer a:hover{color:var(--fg)}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);padding:10px 18px;background:var(--bg-raise);border:1px solid var(--acc-1);border-radius:var(--r);font-family:var(--mono);font-size:12px;color:var(--fg);opacity:0;transition:all .25s var(--ease);z-index:999}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.kbd-hint{position:fixed;bottom:16px;left:16px;z-index:50;font-family:var(--mono);font-size:10px;color:var(--fg-faint);letter-spacing:1px;background:rgba(10,10,11,0.7);padding:6px 10px;border-radius:6px;border:1px solid var(--border);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;transition:opacity .2s ease;pointer-events:none}
+.kbd-hint.show{opacity:1}
+.kbd-hint kbd{color:var(--fg-soft);background:var(--bg-raise);border:1px solid var(--border-hi);padding:1px 5px;border-radius:3px;font-size:10px;margin:0 1px}
+
+@media (max-width:720px){
+  .nav-links{display:none}
+  .hero{padding:70px 0 60px}
+  .cmd{grid-template-columns:1fr;gap:8px}
+  .release{grid-template-columns:1fr;gap:12px}
+  .section{padding:52px 0}
+  .term-body{font-size:11px}
+  .dep,.rm-item{grid-template-columns:1fr;gap:6px}
+  .kbd-hint{display:none}
+}
+
+/* === R11 reading section css === */
+.preview-hint{
+  color:var(--fg-soft);font-size:14px;margin-bottom:12px;max-width:800px;line-height:1.6;
+}
+.preview-hint code{
+  background:var(--bg-soft);border:1px solid var(--border);
+  padding:0 5px;border-radius:3px;color:var(--acc-2);font-size:.88em;
+}
+
+.report-frame{
+  margin:20px 0;border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;background:var(--bg-soft);
+}
+.report-frame-bar{
+  display:flex;align-items:center;gap:8px;padding:8px 14px;
+  background:#0f0f12;border-bottom:1px solid var(--border);
+  font-family:var(--mono);font-size:11px;color:var(--fg-faint);letter-spacing:1px;
+}
+.report-frame-bar .rl{color:var(--acc-1);font-weight:600;letter-spacing:2px}
+.report-frame-foot{
+  padding:10px 16px;background:var(--bg-soft);
+  border-top:1px solid var(--border);
+  font-size:12px;color:var(--fg-mute);line-height:1.55;
+}
+.report-frame-foot code{
+  background:var(--bg-raise);border:1px solid var(--border);
+  padding:0 4px;border-radius:3px;color:var(--acc-2);font-size:.9em;
+}
+
+/* HTML report preview */
+.html-report{
+  padding:24px;background:#000;position:relative;
+}
+.html-report .astrym-brand-fake{
+  position:absolute;top:16px;left:16px;
+  display:flex;align-items:center;gap:8px;
+  padding:6px 10px;border-radius:8px;
+  background:rgba(10,10,10,0.72);
+  border:1px solid rgba(168,85,247,0.25);
+  font-family:var(--mono);font-size:12px;letter-spacing:5px;
+  color:#c084fc;font-weight:600;text-transform:uppercase;
+}
+.html-report .astrym-brand-fake svg{filter:drop-shadow(0 0 6px rgba(168,85,247,0.55))}
+.html-report .astrym-toolbar-fake{
+  display:flex;gap:8px;align-items:center;
+  padding:8px 12px;margin:0 0 24px;
+  background:#0a0a0a;border:1px solid #2a2a2a;
+  border-radius:6px;
+  font-family:var(--mono);font-size:11px;
+}
+.html-report .astrym-toolbar-fake input{
+  flex:1;background:#000;color:#555;border:1px solid #2a2a2a;
+  padding:5px 10px;font-family:inherit;font-size:11px;outline:none;
+}
+.html-report .astrym-toolbar-fake .hits{color:#555;font-size:10px;letter-spacing:1px}
+.html-report .astrym-toolbar-fake .hits b{color:#a855f7}
+.html-report .astrym-toolbar-fake button{
+  background:#111;color:#ccc;border:1px solid #2a2a2a;
+  padding:5px 9px;font-family:inherit;font-size:10px;letter-spacing:1px;
+  text-transform:uppercase;cursor:default;
+}
+.html-report h1{
+  font-family:var(--mono);font-size:20px;color:var(--acc-1);margin-bottom:2px;
+}
+.html-report .h2{
+  font-family:var(--mono);font-size:16px;color:#fff;margin-bottom:6px;word-break:break-all;
+}
+.html-report .tagline{
+  font-family:var(--mono);font-size:10px;color:#777;
+  letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;
+}
+.html-report .card{
+  border:1px solid #2a2a2a;background:#080808;margin:12px 0;padding:14px 18px;
+}
+.html-report .ct{
+  font-family:var(--mono);font-size:10.5px;color:#999;
+  letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.html-report .ct small{color:#666;letter-spacing:1px;text-transform:none;font-size:10px}
+.html-report table.kv{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px}
+.html-report table.kv tr{border-bottom:1px dashed #1a1a1a;border-left:3px solid #000}
+.html-report table.kv tr:last-child{border-bottom:none}
+.html-report table.kv tr.crit{border-left-color:#f87171}
+.html-report table.kv tr.imp{border-left-color:#fbbf24}
+.html-report table.kv tr.info{border-left-color:#4ade80}
+.html-report table.kv tr.junk{border-left-color:#333}
+.html-report table.kv td{padding:7px 10px;vertical-align:top;color:#fff!important}
+.html-report table.kv td:first-child{
+  color:#888!important;width:34%;font-size:10.5px;
+  letter-spacing:1px;text-transform:uppercase;padding-right:12px;
+}
+.html-report table.kv td:last-child{color:#fff!important;word-break:break-all}
+
+/* XLSX preview */
+.xlsx-preview{padding:0;background:#fff}
+.xlsx-tabs{
+  display:flex;background:#f0f0f0;border-bottom:1px solid #ccc;
+  font-family:var(--sans);font-size:12px;color:#333;
+}
+.xlsx-tab{padding:8px 16px;border-right:1px solid #ddd;color:#555;cursor:default}
+.xlsx-tab.active{
+  background:#fff;font-weight:600;color:#7c3aed;border-bottom:2px solid #7c3aed;
+}
+.xlsx-preview table.xlsx{
+  width:100%;border-collapse:collapse;
+  font-family:var(--sans);font-size:12px;color:#222;
+}
+.xlsx-preview table.xlsx th{
+  background:#a855f7;color:#fff;font-weight:600;
+  padding:8px 12px;text-align:left;font-size:11px;
+  letter-spacing:.5px;text-transform:uppercase;
+}
+.xlsx-preview table.xlsx td{
+  padding:7px 12px;border-bottom:1px solid #eee;color:#222;
+  font-family:var(--mono);font-size:11.5px;
+}
+.xlsx-preview table.xlsx tr:nth-child(even) td{background:#fafafa}
+.xlsx-hint{
+  padding:10px 16px;background:#f5f5f5;color:#888;
+  font-family:var(--mono);font-size:10px;
+  letter-spacing:2px;text-transform:uppercase;
+  border-top:1px solid #e0e0e0;border-bottom:1px solid #e0e0e0;
+}
+
+/* MD preview */
+.md-preview{
+  padding:24px 28px;background:#1a1a1e;color:#c0c0c6;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-size:14px;line-height:1.7;
+}
+.md-frontmatter{
+  background:#141418;border-left:3px solid #7c3aed;
+  padding:12px 16px;margin-bottom:20px;
+  font-family:var(--mono);font-size:12px;color:#a0a0ac;
+  border-radius:0 6px 6px 0;white-space:pre-wrap;line-height:1.7;
+}
+.md-preview h1{font-size:20px;font-weight:600;color:#fff;margin:16px 0 10px}
+.md-preview h2{font-size:16px;font-weight:600;color:#e0e0e6;margin:20px 0 10px}
+.md-preview p{color:#c0c0c6;margin:8px 0}
+.md-preview hr{border:none;border-top:1px solid #2a2a30;margin:16px 0}
+.md-preview table.md-table{
+  width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;
+}
+.md-preview table.md-table th{
+  text-align:left;color:#999;font-weight:500;
+  padding:6px 10px;border-bottom:1px solid #2a2a30;
+  font-size:11px;letter-spacing:1px;text-transform:uppercase;
+}
+.md-preview table.md-table td{
+  padding:6px 10px;border-bottom:1px dashed #222228;color:#c0c0c6;
+  font-family:var(--mono);font-size:12px;
+}
+
+/* Topology preview */
+.topology-preview{
+  background:#000;padding:20px;
+}
+.topology-preview .topo-svg{
+  width:100%;height:auto;max-width:800px;
+  display:block;margin:0 auto;
+}
+
+/* R14 site update: цветные строки xlsx-preview */
+.xlsx-preview table.xlsx tr.row-ok td{background:#ecfccb;color:#365314}
+.xlsx-preview table.xlsx tr.row-warn td{background:#fef3c7;color:#78350f}
+.xlsx-preview table.xlsx tr.row-err td{background:#fee2e2;color:#7f1d1d}
+.xlsx-preview table.xlsx tr.row-ok:hover td,
+.xlsx-preview table.xlsx tr.row-warn:hover td,
+.xlsx-preview table.xlsx tr.row-err:hover td{filter:brightness(0.97)}
+/* === end R14 === */
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="nav-brand" href="#top">
+      <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs><linearGradient id="ng" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#a855f7"/>
+          <stop offset="100%" stop-color="#60a5fa"/>
+        </linearGradient></defs>
+        <polygon points="256,40 443,148 443,364 256,472 69,364 69,148" fill="none" stroke="url(#ng)" stroke-width="16" stroke-linejoin="round"/>
+        <line x1="256" y1="256" x2="256" y2="130" stroke="url(#ng)" stroke-width="10"/>
+        <line x1="256" y1="130" x2="366" y2="320" stroke="url(#ng)" stroke-width="10"/>
+        <line x1="256" y1="130" x2="146" y2="320" stroke="url(#ng)" stroke-width="10"/>
+        <circle cx="256" cy="130" r="30" fill="url(#ng)"/>
+        <circle cx="366" cy="320" r="30" fill="url(#ng)"/>
+        <circle cx="146" cy="320" r="30" fill="url(#ng)"/>
+        <path d="M 256 222 L 262 250 L 290 256 L 262 262 L 256 290 L 250 262 L 222 256 L 250 250 Z" fill="#fff"/>
+      </svg>
+      <span>ASTRYM</span>
+    </a>
+    <div class="nav-links">
+      <a href="#about">о проекте</a>
+      <a href="#commands">команды</a>
+      <a href="#reading">чтение</a>
+      <a href="#obsidian">Obsidian</a>
+      <a href="#flags">флаги</a>
+      <a href="#localdb">базы</a>
+      <a href="#changelog">история</a>
+      <a href="#archive">архив</a>
+      <a href="#roadmap">roadmap</a>
+      <a href="#install">установка</a>
+    </div>
+  </div>
+</nav>
+
+<main id="top">
+
+<section class="hero in-view">
+  <div class="wrap">
+    <div class="hero-badge"><span class="dot"></span><span>Astrym | Intelligence</span></div>
+    <h1><span class="grad">OSINT,</span><br>который строится<br>вокруг графа.</h1>
+    <p class="lead">ASTRYM — модульный инструмент для разведки по открытым источникам. Работает локально, не отправляет данные наружу, покрывает 80% задач без API-ключей. Всё, что находит — складывает в единый граф связей SQLite и умеет выгружать в STIX 2.1, XLSX и Obsidian. Работает офлайн: ASN, geo и MAC-вендор берутся из локальных баз, если API недоступны.</p>
+    <div class="hero-cta">
+      <div class="install">
+        <span class="prefix">$</span>
+        <code>python astrym.py ip 8.8.8.8</code>
+        <button class="copy" data-copy="python astrym.py ip 8.8.8.8">copy</button>
+      </div>
+    </div>
+    <div class="hero-why">
+      <h2>Почему всё это</h2>
+      <p>ASTRYM появился 1 июня 2026 как один файл на <strong>1400 строк</strong>.</p>
+      <p>Идея была простая: не делать ещё один «список сервисов для OSINT», а собрать один инструмент, который умеет запускать всё локально, складывать данные в единую базу и искать связи.</p>
+      <p>Отсюда — <strong>граф</strong> (SQLite вместо заметок), <strong>кэш</strong> (чтобы API не дёргались по десять раз), <strong>экспорт</strong> (STIX/MISP/OpenCTI).</p>
+      <p>Никаких облаков, никаких «мы храним ваши сканы у себя». Всё в <code>~/.astrym/</code>, всё на твоей машине.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="about">
+  <div class="wrap">
+    <div class="section-head"><span class="num">01</span><h2>Что это</h2><span class="meta">3 принципа</span></div>
+    <div class="intro">
+      <p><strong>Только открытые источники.</strong> Никаких взломов, никаких баз «на продажу». Всё, что собирается, доступно любому человеку в интернете — вопрос только в том, чтобы собрать это за один раз, а не за сто вкладок.</p>
+      <p><strong>Пассивный сбор где возможно.</strong> CT-логи, RDAP, passive DNS, публичные blocklist'ы, HIBP через k-anonymity. Активные запросы — только там, где это осмысленно.</p>
+      <p><strong>Единый граф.</strong> Каждая команда складывает узлы и рёбра в SQLite. Домен, IP, NS, MX, ASN, сертификат — точки в графе. <code>related</code>, <code>correlate</code>, <code>community</code>, <code>path</code>, <code>bridge</code> дают то, ради чего всё и строилось: связи.</p>
+    </div>
+    <div class="features">
+      <div class="feature"><h3>Без ключей</h3><p>CT (crt.sh + certspotter + hackertarget + grepular), RDAP, passive DNS, XposedOrNot, Hudson Rock, IPsum, Spamhaus DROP, Team Cymru, Shodan InternetDB.</p></div>
+      <div class="feature"><h3>С ключами</h3><p>VirusTotal, Shodan, Censys, SecurityTrails, Hunter.io, MISP, OpenCTI, Jira, Linear, IntelX, HIBP. Через <code>~/.astrym/config.json</code>.</p></div>
+      <div class="feature"><h3>Экспорт</h3><p>JSON, HTML, MD, CSV, XLSX, PDF, STIX 2.1, GEXF, Neo4j-Cypher, Obsidian vault. Плюс push в MISP и OpenCTI.</p></div>
+      <div class="feature"><h3>Автоматика</h3><p>schedule (cron + alert-on), monitor, alerts (Telegram/Discord/webhook), search (FTS5), diff между JSON-сканами.</p></div>
+    </div>
+  </div>
+</section>
+<section class="section" id="commands">
+  <div class="wrap">
+    <div class="section-head"><span class="num">02</span><h2>Команды</h2><span class="meta">126 команд &middot; 9 групп &middot; 10 форматов &middot; ~2000 комбинаций</span></div>
+
+    <div class="cmd-group">
+      <div class="cmd-group-head">Core — базовые данные</div>
+      <div class="cmd"><div class="cmd-name">ip <span class="args">&lt;addr&gt;</span></div><div class="cmd-body"><div class="desc">Geo, PTR, DNSBL, WHOIS, IP2Location.</div><div class="ex">astrym.py ip 8.8.8.8 -x</div></div></div>
+      <div class="cmd"><div class="cmd-name">domain <span class="args">&lt;domain&gt;</span></div><div class="cmd-body"><div class="desc">DNS + WHOIS (через RDAP) + субдомены из CT.</div><div class="ex">astrym.py domain github.com -x</div></div></div>
+      <div class="cmd"><div class="cmd-name">dns <span class="args">&lt;domain&gt;</span></div><div class="cmd-body"><div class="desc">A/AAAA/MX/NS/TXT/CNAME/SOA/CAA/SRV + DNSSEC chain (DNSViz).</div><div class="ex">astrym.py dns github.com</div></div></div>
+      <div class="cmd"><div class="cmd-name">sub <span class="args">&lt;domain&gt;</span></div><div class="cmd-body"><div class="desc">CT (4 источника) + brute + перестановки + HTTP-probe.</div><div class="ex">astrym.py sub github.com -x --no-probe</div></div></div>
+      <div class="cmd"><div class="cmd-name">email <span class="args">&lt;email&gt;</span></div><div class="cmd-body"><div class="desc">MX + SMTP verify + Gravatar + HIBP + XposedOrNot.</div><div class="ex">astrym.py email user@example.com -x</div></div></div>
+      <div class="cmd"><div class="cmd-name">check <span class="args">&lt;target&gt;</span></div><div class="cmd-body"><div class="desc">VT, GreyNoise, URLhaus, ThreatFox, OTX, Feodo, IPsum, Spamhaus, Blocklist.de, Shodan IDB.</div><div class="ex">astrym.py check 8.8.8.8</div></div></div>
+      <div class="cmd"><div class="cmd-name">ssl <span class="args">&lt;domain&gt;</span></div><div class="cmd-body"><div class="desc">TLS/SSL: протокол, шифр, срок, SAN, HSTS.</div><div class="ex">astrym.py ssl github.com</div></div></div>
+      <div class="cmd"><div class="cmd-name">scan <span class="args">&lt;target&gt;</span></div><div class="cmd-body"><div class="desc">Авто-определение типа и запуск подходящего модуля.</div><div class="ex">astrym.py scan github.com -x</div></div></div>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-group-head">Recon — разведка</div>
+      <div class="cmd"><div class="cmd-name">web <span class="args">&lt;domain&gt;</span></div><div class="cmd-body"><div class="desc">CMS, заголовки, exposed paths, favicon hash, shared analytics, WAF-признаки.</div><div class="ex">astrym.py web github.com -x</div></div></div>
+      <div class="cmd"><div class="cmd-name">takeover <span class="args">&lt;domain&gt;</span></div><div class="cmd-body"><div class="desc">Subdomain takeover по 60+ сервисам.</div><div class="ex">astrym.py takeover example.com</div></div></div>
+      <div class="cmd"><div class="cmd-name">origin <span class="args">&lt;domain&gt;</span></div><div class="cmd-body"><div class="desc">Поиск origin IP за Cloudflare.</div><div class="ex">astrym.py origin example.com</div></div></div>
+      <div class="cmd"><div class="cmd-name">whois-history <span class="args">&lt;domain&gt;</span></div><div class="cmd-body"><div class="desc">Историческая WHOIS: crt.sh timeline + RDAP + WhoisXML.</div><div class="ex">astrym.py whois-history github.com</div></div></div>
+      <div class="cmd"><div class="cmd-name">asn <span class="args">&lt;AS…&gt;</span></div><div class="cmd-body"><div class="desc">ASN discovery: info, prefixes, peers, PeeringDB.</div><div class="ex">astrym.py asn AS15169</div></div></div>
+      <div class="cmd"><div class="cmd-name">username <span class="args">&lt;name&gt;</span></div><div class="cmd-body"><div class="desc">Поиск username на 28+ платформах.</div><div class="ex">astrym.py username torvalds</div></div></div>
+      <div class="cmd"><div class="cmd-name">dork <span class="args">&lt;target&gt;</span></div><div class="cmd-body"><div class="desc">Генератор Google Dorks по категориям.</div><div class="ex">astrym.py dork example.com</div></div></div>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-group-head">Graph — связи</div>
+      <div class="cmd"><div class="cmd-name">related <span class="args">&lt;target&gt;</span></div><div class="cmd-body"><div class="desc">Связанные узлы вокруг цели в графе.</div><div class="ex">astrym.py related github.com --depth 2</div></div></div>
+      <div class="cmd"><div class="cmd-name">correlate <span class="args">&lt;t1&gt; [t2…]</span></div><div class="cmd-body"><div class="desc">Общая инфраструктура между целями.</div><div class="ex">astrym.py correlate github.com gitlab.com</div></div></div>
+      <div class="cmd"><div class="cmd-name">community <span class="args"></span></div><div class="cmd-body"><div class="desc">Louvain-сообщества с автоматическими метками.</div><div class="ex">astrym.py community</div></div></div>
+      <div class="cmd"><div class="cmd-name">gexf <span class="args">[out]</span></div><div class="cmd-body"><div class="desc">Экспорт графа в GEXF для Gephi.</div><div class="ex">astrym.py gexf</div></div></div>
+      <div class="cmd"><div class="cmd-name">path <span class="args">&lt;a&gt; &lt;b&gt;</span></div><div class="cmd-body"><div class="desc">Кратчайший путь между узлами (direct + soft bridge).</div><div class="ex">astrym.py path github.com gitlab.com</div></div></div>
+      <div class="cmd"><div class="cmd-name">bridge <span class="args">&lt;a&gt; &lt;b&gt;</span></div><div class="cmd-body"><div class="desc">Что общего у двух узлов.</div><div class="ex">astrym.py bridge github.com gitlab.com</div></div></div>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-group-head">Reverse — обратный поиск</div>
+      <div class="cmd"><div class="cmd-name">reverse-ip <span class="args">&lt;ip&gt;</span></div><div class="cmd-body"><div class="desc">Домены, указывающие на IP.</div><div class="ex">astrym.py reverse-ip 1.1.1.1</div></div></div>
+      <div class="cmd"><div class="cmd-name">reverse-ns <span class="args">&lt;ns&gt;</span></div><div class="cmd-body"><div class="desc">Домены на этом NS.</div><div class="ex">astrym.py reverse-ns ns1.example.com</div></div></div>
+      <div class="cmd"><div class="cmd-name">reverse-analytics <span class="args">&lt;id&gt;</span></div><div class="cmd-body"><div class="desc">Домены с общим GA/GTM/AdSense/FB-Pixel ID.</div><div class="ex">astrym.py reverse-analytics UA-1234-5</div></div></div>
+      <div class="cmd"><div class="cmd-name">reverse-favicon <span class="args">&lt;hash&gt;</span></div><div class="cmd-body"><div class="desc">Домены с тем же favicon (mmh3).</div><div class="ex">astrym.py reverse-favicon -12345678</div></div></div>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-group-head">Intel — сервисная разведка</div>
+      <div class="cmd"><div class="cmd-name">ports <span class="args">&lt;ip&gt;</span></div><div class="cmd-body"><div class="desc">TCP-скан типовых портов + Shodan IDB.</div><div class="ex">astrym.py ports 1.1.1.1</div></div></div>
+      <div class="cmd"><div class="cmd-name">secheaders <span class="args">&lt;domain&gt;</span></div><div class="cmd-body"><div class="desc">HSTS/CSP/XFO/... с оценкой 0–100.</div><div class="ex">astrym.py secheaders github.com</div></div></div>
+      <div class="cmd"><div class="cmd-name">dnssec <span class="args">&lt;domain&gt;</span></div><div class="cmd-body"><div class="desc">DS/DNSKEY/AD + DNSViz chain validation.</div><div class="ex">astrym.py dnssec cloudflare.com</div></div></div>
+      <div class="cmd"><div class="cmd-name">osv <span class="args">&lt;pkg&gt; [ver] [eco]</span></div><div class="cmd-body"><div class="desc">Vulnerabilities пакета через OSV.dev.</div><div class="ex">astrym.py osv lodash 4.17.20 npm</div></div></div>
+      <div class="cmd"><div class="cmd-name">wmn <span class="args">&lt;username&gt;</span></div><div class="cmd-body"><div class="desc">WhatsMyName: 500+ сайтов параллельно.</div><div class="ex">astrym.py wmn torvalds -x</div></div></div>
+      <div class="cmd"><div class="cmd-name">spf-chain <span class="args">&lt;domain&gt;</span></div><div class="cmd-body"><div class="desc">Дерево SPF include + проверка &gt;10 lookups.</div><div class="ex">astrym.py spf-chain github.com</div></div></div>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-group-head">LeakSrc — утечки</div>
+      <div class="cmd"><div class="cmd-name">leakcheck <span class="args">&lt;target&gt;</span></div><div class="cmd-body"><div class="desc">LeakCheck public API.</div><div class="ex">astrym.py leakcheck user@example.com</div></div></div>
+      <div class="cmd"><div class="cmd-name">email-full <span class="args">&lt;email&gt;</span></div><div class="cmd-body"><div class="desc">Сводка по всем leak-источникам.</div><div class="ex">astrym.py email-full user@example.com</div></div></div>
+      <div class="cmd"><div class="cmd-name">hr-email <span class="args">&lt;email&gt;</span></div><div class="cmd-body"><div class="desc">Hudson Rock: infostealer по email.</div><div class="ex">astrym.py hr-email user@example.com</div></div></div>
+      <div class="cmd"><div class="cmd-name">hr-domain <span class="args">&lt;domain&gt;</span></div><div class="cmd-body"><div class="desc">Hudson Rock: заражённые сотрудники по домену.</div><div class="ex">astrym.py hr-domain example.com</div></div></div>
+      <div class="cmd"><div class="cmd-name">identity <span class="args">&lt;target&gt;</span></div><div class="cmd-body"><div class="desc">Единый граф связей по одной цели.</div><div class="ex">astrym.py identity user@example.com</div></div></div>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-group-head">Export / Intel sharing</div>
+      <div class="cmd"><div class="cmd-name">stix <span class="args">&lt;target&gt;</span></div><div class="cmd-body"><div class="desc">Экспорт в STIX 2.1.</div><div class="ex">astrym.py stix 8.8.8.8</div></div></div>
+      <div class="cmd"><div class="cmd-name">push-misp <span class="args">&lt;bundle.json&gt;</span></div><div class="cmd-body"><div class="desc">Отправка STIX bundle в MISP.</div><div class="ex">astrym.py push-misp bundle.json</div></div></div>
+      <div class="cmd"><div class="cmd-name">push-opencti <span class="args">&lt;bundle.json&gt;</span></div><div class="cmd-body"><div class="desc">Отправка в OpenCTI.</div><div class="ex">astrym.py push-opencti bundle.json</div></div></div>
+      <div class="cmd"><div class="cmd-name">enrich <span class="args">&lt;target&gt;</span></div><div class="cmd-body"><div class="desc">Обогащение: base + check + специфичные.</div><div class="ex">astrym.py enrich github.com --fast</div></div></div>
+      <div class="cmd"><div class="cmd-name">classify <span class="args">&lt;target&gt;</span></div><div class="cmd-body"><div class="desc">Rule-based: legit/suspicious/phishing/malware.</div><div class="ex">astrym.py classify example.com --deep</div></div></div>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-group-head">Automation</div>
+      <div class="cmd"><div class="cmd-name">schedule-add <span class="args">&lt;target&gt; &lt;cmd&gt;</span></div><div class="cmd-body"><div class="desc">Добавить периодическую задачу. Флаги: <code>--every 24h</code>, <code>--cron "0 6 * * *"</code>, <code>--alert-on new-subdomain,ip-change</code>.</div><div class="ex">astrym.py schedule-add github.com sub --cron "0 6 * * *" --alert-on new-subdomain</div></div></div>
+      <div class="cmd"><div class="cmd-name">schedule-list <span class="args"></span></div><div class="cmd-body"><div class="desc">Список задач с next-run и alert-on.</div><div class="ex">astrym.py schedule-list</div></div></div>
+      <div class="cmd"><div class="cmd-name">schedule-rm <span class="args">&lt;id&gt;</span></div><div class="cmd-body"><div class="desc">Удалить задачу и снять из crontab/schtasks.</div><div class="ex">astrym.py schedule-rm a3f9c1e2</div></div></div>
+      <div class="cmd"><div class="cmd-name">schedule-run <span class="args">[id] [--due]</span></div><div class="cmd-body"><div class="desc">Прогнать задачу сразу или только due (для внешнего crontab / termux-job-scheduler).</div><div class="ex">astrym.py schedule-run --due</div></div></div>
+      <div class="cmd"><div class="cmd-name">monitor <span class="args">&lt;target&gt;</span></div><div class="cmd-body"><div class="desc">Foreground-мониторинг с алертами в Telegram/Discord/webhook.</div><div class="ex">astrym.py monitor github.com --interval 600</div></div></div>
+      <div class="cmd"><div class="cmd-name">diff <span class="args">&lt;a.json&gt; &lt;b.json&gt;</span></div><div class="cmd-body"><div class="desc">Сравнение двух JSON-сканов.</div><div class="ex">astrym.py diff a.json b.json</div></div></div>
+      <div class="cmd"><div class="cmd-name">search <span class="args">&lt;query&gt;</span></div><div class="cmd-body"><div class="desc">FTS5-поиск по results/ + граф + заметки.</div><div class="ex">astrym.py search cloudflare</div></div></div>
+      <div class="cmd"><div class="cmd-name">stats <span class="args"></span></div><div class="cmd-body"><div class="desc">Сводка: граф, кэш, results, search.</div><div class="ex">astrym.py stats</div></div></div>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-group-head">DB &mdash; локальные базы</div>
+      <div class="cmd"><div class="cmd-name">mac <span class="args">&lt;addr&gt;</span></div><div class="cmd-body"><div class="desc">Вендор по MAC через IEEE OUI (MA-L / MA-M / MA-S). Работает офлайн.</div><div class="ex">astrym.py mac 3C:5A:B4:11:22:33</div></div></div>
+      <div class="cmd"><div class="cmd-name">ip-local <span class="args">&lt;ip&gt;</span></div><div class="cmd-body"><div class="desc">ASN и организация по IPv4/IPv6 из локальных баз. Офлайн-режим без API.</div><div class="ex">astrym.py ip-local 8.8.8.8</div></div></div>
+      <div class="cmd"><div class="cmd-name">db-status <span class="args"></span></div><div class="cmd-body"><div class="desc">Список локальных баз: файлы, размеры, даты последнего обновления.</div><div class="ex">astrym.py db-status</div></div></div>
+      <div class="cmd"><div class="cmd-name">db-sync <span class="args"></span></div><div class="cmd-body"><div class="desc">Скачать/обновить все локальные базы (14 источников, ~319 MB).</div><div class="ex">astrym.py db-sync</div></div></div>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-group-head">Utility</div>
+      <div class="cmd"><div class="cmd-name">hr-status <span class="args"></span></div><div class="cmd-body"><div class="desc">Hudson Rock клиент: 429-счётчики, retries, cache hits, средний backoff за сессию.</div><div class="ex">astrym.py hr-status</div></div></div>
+      <div class="cmd"><div class="cmd-name">r2-status <span class="args"></span></div><div class="cmd-body"><div class="desc">ProcessPool для threat intel: сколько задач выполнено, сколько fallback в threads.</div><div class="ex">astrym.py r2-status</div></div></div>
+      <div class="cmd"><div class="cmd-name">pdf-status <span class="args"></span></div><div class="cmd-body"><div class="desc">Что реально работает: reportlab, fpdf2, найден ли Unicode-TTF.</div><div class="ex">astrym.py pdf-status</div></div></div>
+      <div class="cmd"><div class="cmd-name">ws <span class="args">[name|--list]</span></div><div class="cmd-body"><div class="desc">Workspaces графа: список, переключение, статус.</div><div class="ex">astrym.py ws --list</div></div></div>
+      <div class="cmd"><div class="cmd-name">ratelimit <span class="args"></span></div><div class="cmd-body"><div class="desc">Состояние rate-limit для serve.py: активные IP, rps, burst.</div><div class="ex">astrym.py ratelimit</div></div></div>
+      <div class="cmd"><div class="cmd-name">netstatus <span class="args"></span></div><div class="cmd-body"><div class="desc">Состояние net layer: Tor, прокси, random UA, circuit breaker.</div><div class="ex">astrym.py netstatus</div></div></div>
+      <div class="cmd"><div class="cmd-name">help <span class="args">[cmd]</span></div><div class="cmd-body"><div class="desc">Справка по команде или общий экран.</div><div class="ex">astrym.py help sub</div></div></div>
+      <div class="cmd"><div class="cmd-name">completion <span class="args">[bash|zsh]</span></div><div class="cmd-body"><div class="desc">Автодополнение для shell.</div><div class="ex">source &lt;(astrym.py completion bash)</div></div></div>
+      <div class="cmd"><div class="cmd-name">check-updates <span class="args"></span></div><div class="cmd-body"><div class="desc">Проверка новых версий через GitHub API.</div><div class="ex">astrym.py check-updates</div></div></div>
+      <div class="cmd"><div class="cmd-name">phone <span class="args">&lt;num&gt;</span></div><div class="cmd-body"><div class="desc">Разбор, страна, оператор, часовые пояса, мессенджеры.</div><div class="ex">astrym.py phone +79001234567</div></div></div>
+      <div class="cmd"><div class="cmd-name">exif <span class="args">&lt;file&gt;</span></div><div class="cmd-body"><div class="desc">Метаданные файла через exiftool, GPS → в граф.</div><div class="ex">astrym.py exif photo.jpg</div></div></div>
+      <div class="cmd"><div class="cmd-name">darkweb <span class="args">&lt;.onion&gt;</span></div><div class="cmd-body"><div class="desc">Обход .onion через Tor.</div><div class="ex">astrym.py darkweb http://xxx.onion --pages 5</div></div></div>
+    </div>
+
+  </div>
+</section>
+
+<section class="section" id="reading">
+  <div class="wrap">
+    <div class="section-head"><span class="num">02b</span><h2>Чтение вывода</h2><span class="meta">реальные примеры отчётов</span></div>
+
+    <div class="intro" style="margin-bottom:24px">
+      <p>Каждая команда печатает структурированный отчёт. Ниже — как он выглядит в консоли, в браузере (HTML), в Excel (XLSX), в Obsidian/Markdown и в виде графа связей. Всё показано на одном реальном примере: <code>astrym.py ip 8.8.8.8 -x</code>.</p>
+    </div>
+
+    <h3 style="font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin-bottom:12px">Цветовая легенда</h3>
+    <div class="legend">
+      <div class="legend-item"><b style="color:var(--ok)">[+] ok</b>всё хорошо: чисто, валидно, найдено</div>
+      <div class="legend-item"><b style="color:var(--warn)">[!] warn</b>обрати внимание: подозрительно, но не критично</div>
+      <div class="legend-item"><b style="color:var(--err)">[-] err</b>опасно: malicious, expired, listed, breach</div>
+      <div class="legend-item"><b style="color:var(--acc-2)">. info</b>нейтральное сообщение, детали</div>
+      <div class="legend-item"><b style="color:var(--fg-mute)">grey text</b>muted, служебное, не главное</div>
+    </div>
+
+    <div class="read-block">
+      <h3>Риск-скор в <code>check</code></h3>
+      <p>В конце <code>check</code> печатается строка <code>Score: 45/100 · HIGH</code>. Значение — сумма баллов от источников: VT даёт до 60, Feodo — 25, GreyNoise-malicious — 20, Spamhaus DROP — 20, URLhaus — 25. Каждый источник даёт баллы только если что-то нашёл.</p>
+      <ul>
+        <li><b>0</b> — CLEAN, ничего не найдено.</li>
+        <li><b>1–15</b> — LOW, единичные совпадения.</li>
+        <li><b>15–40</b> — MEDIUM, 3+ движка или blocklist.</li>
+        <li><b>40–70</b> — HIGH, серьёзные источники (Feodo, Spamhaus DROP, OTX).</li>
+        <li><b>70+</b> — CRITICAL, активная malware-инфраструктура.</li>
+      </ul>
+    </div>
+
+    <div class="read-block">
+      <h3>Консенсус в <code>ip</code> и <code>domain</code></h3>
+      <p>Несколько источников (ip-api, ipwho, ipinfo, RIPE, Team Cymru) отвечают про страну/ASN/ISP. Консенсус считает голоса и помечает поле:</p>
+      <ul>
+        <li><code>confirmed (4/4)</code> — все согласны, можно верить.</li>
+        <li><code>likely (2/2)</code> — большинство согласно.</li>
+        <li><code>single (1/1)</code> — только один источник ответил.</li>
+        <li><code>weak (1/2)</code> — источники разошлись.</li>
+        <li><code>conflict</code> — полное расхождение, смотри поле alternatives.</li>
+      </ul>
+      <div class="annot"><strong>Anycast</strong>Для публичных DNS (8.8.8.8, 1.1.1.1) страна/город/таймзона помечаются как <code>anycast</code>, а не <code>conflict</code> — потому что один IP действительно живёт в десятке стран одновременно.</div>
+    </div>
+
+    <h3 style="font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin:40px 0 12px">Пример · консоль · ip 8.8.8.8 -x</h3>
+    <p class="preview-hint">Так выглядит вывод команды в терминале. Цветные метки, две колонки, секции через <code>──</code>. Файлы сохраняются в <code>results/ip/ip1.*</code>.</p>
+    <div class="term">
+      <div class="term-bar"><span class="dot3"><span></span><span></span><span></span></span><span class="title">astrym.py ip 8.8.8.8 -x</span></div>
+      <div class="term-body">
+<span class="p">── Overview ────────────────────────────────────────</span>
+  Address    8.8.8.8
+  Version    IPv4
+  PTR        dns.google
+  Private    <span class="g">no</span>
+  Country    United States [US]
+  ISP        Google LLC
+  Org        Google Public DNS
+  ASN        AS15169 Google LLC
+  Source     ip-api.com
+
+<span class="p">── Consensus (multi-source) ───────────────────────</span>
+  asn            AS15169                       <span class="g">confirmed (4/4)</span>
+  country        US                            <span class="g">confirmed (3/3)</span>
+  org            google                        <span class="g">confirmed (3/3)</span>
+  isp            google                        <span class="g">likely (2/2)</span>
+  timezone       America/New_York              <span class="y">weak (1/2)</span>
+  city           Ashburn                       <span class="r">conflict</span>
+  region         Virginia                      <span class="y">weak (1/2)</span>
+  <span class="d">i  anycast IP - city / region / timezone неоднозначны</span>
+
+<span class="p">── DNSBL ───────────────────────────────────────────</span>
+  Spamhaus ZEN     <span class="g">clean</span>
+  SpamCop          <span class="g">clean</span>
+  Barracuda        <span class="g">clean</span>
+  SORBS            <span class="g">clean</span>
+  UCEPROTECT       <span class="g">clean</span>
+  CBL              <span class="g">clean</span>
+  <span class="d">... всего 11 зон, все clean</span>
+
+<span class="p">── WHOIS ───────────────────────────────────────────</span>
+  <span class="d">(источник: rdap.org)</span>
+  orgname    Google LLC
+  netname    GOGL
+  netrange   NET-8-8-8-0-2
+  updated    2023-12-28
+  regdate    2023-12-28
+  cidr       8.8.8.0 - 8.8.8.255
+
+<span class="p">── Extended sources ────────────────────────────────</span>
+  <span class="p">ipwho</span>        country=United States  city=San Jose
+  <span class="p">ipinfo</span>       hostname=dns.google  city=Mountain View
+  <span class="p">bgpview</span>      AS15169  prefix=8.8.8.0/24
+  <span class="p">team_cymru</span>   AS15169  prefix=8.8.8.0/24  country=US
+
+<span class="p">── External services ───────────────────────────────</span>
+  IPVoid          https://www.ipvoid.com/ip-blacklist-check/
+  Scamalytics     https://scamalytics.com/ip/8.8.8.8
+  Shodan          https://www.shodan.io/host/8.8.8.8
+  <span class="d">... всего 20 ссылок</span>
+
+<span class="d">. auto-output: results/ip/ip1.*</span>
+<span class="g">[+] JSON  -> results/ip/ip1.json</span>
+<span class="g">[+] HTML  -> results/ip/ip1.html</span>
+      </div>
+    </div>
+
+    <h3 style="font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin:40px 0 12px">Пример · HTML-отчёт</h3>
+    <p class="preview-hint">Флаг <code>-f html</code> создаёт автономный тёмный отчёт: фиксированный логотип в углу, карточки по секциям, полоски слева от строк (красная = critical, жёлтая = important, зелёная = info, серая = junk). Сверху — sticky-тулбар с поиском, expand/collapse, копированием JSON и светлой темой. Ниже — реальный вид отчёта <code>ip1.html</code>.</p>
+    <div class="report-frame">
+      <div class="report-frame-bar"><span class="rl">HTML</span> results/ip/ip1.html · 8.8.8.8 · ASTRYM 8.1.0</div>
+      <div class="html-report">
+        <div class="astrym-brand-fake">
+          <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" width="26" height="26"><polygon points="256,40 443,148 443,364 256,472 69,364 69,148" fill="none" stroke="#a855f7" stroke-width="16" stroke-linejoin="round"/><line x1="256" y1="256" x2="256" y2="130" stroke="#a855f7" stroke-width="12"/><line x1="256" y1="130" x2="366" y2="320" stroke="#60a5fa" stroke-width="12"/><line x1="256" y1="130" x2="146" y2="320" stroke="#60a5fa" stroke-width="12"/><circle cx="256" cy="130" r="30" fill="#a855f7"/><circle cx="366" cy="320" r="30" fill="#60a5fa"/><circle cx="146" cy="320" r="30" fill="#60a5fa"/></svg>
+          <span>ASTRYM</span>
+        </div>
+        <div class="astrym-toolbar-fake">
+          <input type="text" placeholder="Поиск в отчёте... (Ctrl+F)" readonly>
+          <span class="hits"><b>0</b> hits</span>
+          <button>&#x25BC;</button>
+          <button>&#x25B6;</button>
+          <button>Copy JSON</button>
+          <button>&#x2600;</button>
+        </div>
+        <h1>OSINT Report:</h1>
+        <div class="h2">8.8.8.8</div>
+        <div class="tagline">IP · ASTRYM</div>
+
+        <div class="card">
+          <div class="ct">Overview</div>
+          <table class="kv">
+            <tr class="imp"><td>Address</td><td>8.8.8.8</td></tr>
+            <tr class="imp"><td>Version</td><td>IPv4</td></tr>
+            <tr class="imp"><td>PTR</td><td>dns.google</td></tr>
+            <tr class="imp"><td>Private</td><td>false</td></tr>
+            <tr class="imp"><td>Country</td><td>United States</td></tr>
+            <tr class="imp"><td>City</td><td>Ashburn</td></tr>
+            <tr class="imp"><td>ISP</td><td>Google LLC</td></tr>
+            <tr class="imp"><td>ASN</td><td>AS15169 Google LLC</td></tr>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="ct">DNSBL</div>
+          <table class="kv">
+            <tr class="imp"><td>Spamhaus ZEN</td><td>clean</td></tr>
+            <tr class="imp"><td>SpamCop</td><td>clean</td></tr>
+            <tr class="imp"><td>Barracuda</td><td>clean</td></tr>
+            <tr class="imp"><td>SORBS</td><td>clean</td></tr>
+            <tr class="imp"><td>UCEPROTECT</td><td>clean</td></tr>
+            <tr class="imp"><td>CBL</td><td>clean</td></tr>
+            <tr class="imp"><td>NiX Spam</td><td>clean</td></tr>
+            <tr class="imp"><td>PSBL</td><td>clean</td></tr>
+            <tr class="imp"><td>Spamhaus PBL</td><td>clean</td></tr>
+            <tr class="imp"><td>Spamhaus SBL</td><td>clean</td></tr>
+            <tr class="imp"><td>Spamhaus XBL</td><td>clean</td></tr>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="ct">WHOIS</div>
+          <table class="kv">
+            <tr class="imp"><td>orgname</td><td>Google LLC</td></tr>
+            <tr class="imp"><td>netname</td><td>GOGL</td></tr>
+            <tr class="imp"><td>netrange</td><td>NET-8-8-8-0-2</td></tr>
+            <tr class="imp"><td>updated</td><td>2023-12-28</td></tr>
+            <tr class="imp"><td>regdate</td><td>2023-12-28</td></tr>
+            <tr class="imp"><td>cidr</td><td>8.8.8.0 - 8.8.8.255</td></tr>
+            <tr class="imp"><td>_source</td><td>rdap</td></tr>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="ct">Ключевые данные <small>critical + important</small></div>
+          <table class="kv">
+            <tr class="imp"><td>target</td><td>8.8.8.8</td></tr>
+            <tr class="imp"><td>address</td><td>8.8.8.8</td></tr>
+            <tr class="imp"><td>ptr</td><td>dns.google</td></tr>
+            <tr class="imp"><td>country</td><td>United States</td></tr>
+            <tr class="imp"><td>isp</td><td>Google LLC</td></tr>
+            <tr class="imp"><td>asn</td><td>AS15169 Google LLC</td></tr>
+            <tr class="crit"><td>dnsbl_listed</td><td>0</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="report-frame-foot">HTML-отчёт полностью автономен — один файл, никаких внешних ресурсов. Открывается в любом браузере, работает офлайн.</div>
+    </div>
+
+    <h3 style="font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin:40px 0 12px">Пример · XLSX-отчёт</h3>
+    <p class="preview-hint">Флаг <code>-f xlsx</code> создаёт книгу Excel с <b>фиксированной структурой листов</b>: <code>01_summary</code> (сводка), <code>02_key_data</code> (важные поля), <code>03_consensus</code> (голосование с цветом), <code>04_*</code> (секции: dnsbl, whois, dns_records, subdomains, hibp, hr_stealers, ...), <code>05_extended</code>, <code>99_raw</code> (полный flat JSON), <code>!failed</code> (упавшие источники, только если есть). Префиксы <code>01_</code>…<code>99_</code> сортируют вкладки в правильном порядке.</p>
+    <div class="report-frame">
+      <div class="report-frame-bar"><span class="rl">XLSX</span> results/ip/ip2.xlsx · 8 листов · 223 строки</div>
+      <div class="xlsx-preview">
+        <div class="xlsx-tabs">
+          <div class="xlsx-tab active">01_summary</div>
+          <div class="xlsx-tab">!failed</div>
+          <div class="xlsx-tab">02_key_data</div>
+          <div class="xlsx-tab">03_consensus</div>
+          <div class="xlsx-tab">04_dnsbl</div>
+          <div class="xlsx-tab">04_whois</div>
+          <div class="xlsx-tab">05_extended</div>
+          <div class="xlsx-tab">99_raw</div>
+        </div>
+        <table class="xlsx">
+          <tr><th>field</th><th>value</th></tr>
+          <tr><td>tool</td><td>ASTRYM 8.1.0</td></tr>
+          <tr><td>type</td><td>ip</td></tr>
+          <tr><td>target</td><td>8.8.8.8</td></tr>
+          <tr><td>generated_at</td><td>2026-09-25T18:24:52.829707+00:00</td></tr>
+          <tr><td>extended_sources</td><td>1</td></tr>
+          <tr><td>extended_failed</td><td>5</td></tr>
+          <tr><td>consensus_weak</td><td>2</td></tr>
+        </table>
+        <div class="xlsx-hint">--- лист 03_consensus (цветные ячейки) ---</div>
+        <table class="xlsx">
+          <tr><th>field</th><th>value</th><th>confidence</th><th>votes</th><th>total</th><th>sources</th></tr>
+          <tr class="row-ok"><td>country</td><td>US</td><td>single</td><td>1</td><td>1</td><td>ip-api</td></tr>
+          <tr class="row-ok"><td>org</td><td>google</td><td>likely</td><td>2</td><td>2</td><td>ip-api, ipinfo</td></tr>
+          <tr class="row-warn"><td>city</td><td>ashburn</td><td>weak</td><td>1</td><td>2</td><td>ip-api</td></tr>
+          <tr class="row-warn"><td>timezone</td><td>america/new_york</td><td>weak</td><td>1</td><td>2</td><td>ip-api</td></tr>
+        </table>
+        <div class="xlsx-hint">--- лист !failed (красные строки) ---</div>
+        <table class="xlsx">
+          <tr><th>source</th><th>reason</th></tr>
+          <tr class="row-err"><td>ipwho</td><td>no response / timeout</td></tr>
+          <tr class="row-err"><td>ipapi</td><td>no response / timeout</td></tr>
+          <tr class="row-err"><td>ripe_stat</td><td>no response / timeout</td></tr>
+        </table>
+      </div>
+      <div class="report-frame-foot">
+        <b>Лайфхак:</b> если Excel/WPS на телефоне капризничает — открой <code>.xlsx</code> в <b>Google Sheets</b> (все вкладки и цвета видны) или конвертируй в <b>PDF</b> через LibreOffice (<code>File → Export as PDF</code>) — каждый лист станет страницей, ничего не потеряется.
+      </div>
+    </div>
+
+    <h3 style="font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin:40px 0 12px">Пример · Markdown / Obsidian</h3>
+    <p class="preview-hint">Флаг <code>-f md</code> (или <code>-f obsidian</code> для vault) сохраняет отчёт в Markdown. Вверху — frontmatter с тегами: Obsidian и AFFiNE подхватывают его как метаданные заметки. Таблицы нативные, вставляются куда угодно. Открывается в любом Markdown-редакторе.</p>
+    <div class="report-frame">
+      <div class="report-frame-bar"><span class="rl">MD</span> results/ip/ip1.md · frontmatter + таблицы</div>
+      <div class="md-preview">
+        <div class="md-frontmatter">---
+title: "ASTRYM Report: 8.8.8.8"
+date: 2026-09-25T09:32:34.391557+00:00
+tool: ASTRYM 8.1.0
+type: ip
+target: 8.8.8.8
+tags:
+  - astrym
+  - osint
+  - ip
+---</div>
+        <h1># ASTRYM Report: 8.8.8.8</h1>
+        <p>&gt; <strong>Type:</strong> ip · <strong>Tool:</strong> ASTRYM</p>
+        <hr>
+        <h2>## Overview</h2>
+        <table class="md-table">
+          <tr><th>Key</th><th>Value</th></tr>
+          <tr><td>Address</td><td>8.8.8.8</td></tr>
+          <tr><td>Version</td><td>IPv4</td></tr>
+          <tr><td>PTR</td><td>dns.google</td></tr>
+          <tr><td>Private</td><td>no</td></tr>
+          <tr><td>Country</td><td>United States</td></tr>
+          <tr><td>ISP</td><td>Google LLC</td></tr>
+          <tr><td>ASN</td><td>AS15169 Google LLC</td></tr>
+        </table>
+        <h2>## DNSBL</h2>
+        <table class="md-table">
+          <tr><th>Zone</th><th>Status</th></tr>
+          <tr><td>Spamhaus ZEN</td><td>clean</td></tr>
+          <tr><td>SpamCop</td><td>clean</td></tr>
+          <tr><td>Barracuda</td><td>clean</td></tr>
+          <tr><td>SORBS</td><td>clean</td></tr>
+        </table>
+      </div>
+      <div class="report-frame-foot">Файл целиком — около 200 строк Markdown + блок с raw JSON в конце. Импортируется в Obsidian (как заметка), AFFiNE (File → Import → Markdown), любой Markdown-редактор.</div>
+    </div>
+
+    <h3 style="font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin:40px 0 12px">Пример · граф связей (topology)</h3>
+    <p class="preview-hint">Флаг <code>-f topology</code> создаёт отдельный HTML-файл с интерактивным графом на vis-network. Узлы окрашены по типу (target, IP, meta), клик по узлу открывает боковую панель со связями, путём от target, мини-графом и raw JSON. Экспорт в PNG/SVG встроен. Ниже — статичный снимок того же графа.</p>
+    <div class="report-frame">
+      <div class="report-frame-bar"><span class="rl">TOPOLOGY</span> results/ip/ip1_topology.html · 4 nodes · 3 edges</div>
+      <div class="topology-preview">
+        <svg viewBox="0 0 800 420" xmlns="http://www.w3.org/2000/svg" class="topo-svg">
+          <line x1="400" y1="210" x2="200" y2="100" stroke="#2a2a2a" stroke-width="1.5"/>
+          <line x1="400" y1="210" x2="200" y2="210" stroke="#2a2a2a" stroke-width="1.5"/>
+          <line x1="400" y1="210" x2="200" y2="320" stroke="#2a2a2a" stroke-width="1.5"/>
+          <text x="300" y="145" fill="#4a4a4a" font-family="monospace" font-size="10" text-anchor="middle">geo</text>
+          <text x="300" y="205" fill="#4a4a4a" font-family="monospace" font-size="10" text-anchor="middle">ISP</text>
+          <text x="300" y="275" fill="#4a4a4a" font-family="monospace" font-size="10" text-anchor="middle">WHOIS</text>
+
+          <circle cx="400" cy="210" r="30" fill="#a855f7" stroke="#fff" stroke-width="1.5"/>
+          <text x="400" y="215" fill="#000" font-family="monospace" font-size="11" font-weight="700" text-anchor="middle">8.8.8.8</text>
+          <text x="400" y="258" fill="#fff" font-family="monospace" font-size="10" text-anchor="middle">target</text>
+
+          <circle cx="200" cy="100" r="16" fill="#8b7bb8" stroke="#2a2a2a" stroke-width="1.5"/>
+          <text x="200" y="105" fill="#fff" font-family="monospace" font-size="9" text-anchor="middle">US</text>
+          <text x="200" y="132" fill="#fff" font-family="monospace" font-size="10" text-anchor="middle">United States</text>
+
+          <circle cx="200" cy="210" r="16" fill="#8b7bb8" stroke="#2a2a2a" stroke-width="1.5"/>
+          <text x="200" y="215" fill="#fff" font-family="monospace" font-size="9" text-anchor="middle">G</text>
+          <text x="200" y="242" fill="#fff" font-family="monospace" font-size="10" text-anchor="middle">Google LLC</text>
+
+          <circle cx="200" cy="320" r="16" fill="#8b7bb8" stroke="#2a2a2a" stroke-width="1.5"/>
+          <text x="200" y="325" fill="#fff" font-family="monospace" font-size="9" text-anchor="middle">W</text>
+          <text x="200" y="352" fill="#fff" font-family="monospace" font-size="10" text-anchor="middle">WHOIS</text>
+
+          <g transform="translate(560, 60)">
+            <rect x="0" y="0" width="200" height="30" fill="#080808" stroke="#2a2a2a"/>
+            <text x="10" y="20" fill="#888" font-family="monospace" font-size="10">4 NODES · 3 EDGES</text>
+          </g>
+          <g transform="translate(560, 300)">
+            <rect x="0" y="0" width="220" height="90" fill="#080808" stroke="#2a2a2a"/>
+            <circle cx="14" cy="16" r="5" fill="#a855f7"/>
+            <text x="26" y="20" fill="#888" font-family="monospace" font-size="10">target</text>
+            <circle cx="14" cy="38" r="5" fill="#8b7bb8"/>
+            <text x="26" y="42" fill="#888" font-family="monospace" font-size="10">meta (ns / mx / whois)</text>
+            <circle cx="14" cy="60" r="5" fill="#f0c674"/>
+            <text x="26" y="64" fill="#888" font-family="monospace" font-size="10">IP address</text>
+            <circle cx="14" cy="82" r="5" fill="#7ecfff"/>
+            <text x="26" y="86" fill="#888" font-family="monospace" font-size="10">subdomain</text>
+          </g>
+        </svg>
+      </div>
+      <div class="report-frame-foot">Интерактивная версия умеет больше: клик по узлу открывает панель справа с путём от target, списком строгих/мягких/слабых связей, мини-графом и raw JSON. Тулбар справа внизу — экспорт PNG/SVG, highlight соседей, фильтр по типам узлов. Горячие клавиши: Ctrl+H — highlight, Ctrl+E — PNG.</div>
+    </div>
+
+    <div class="read-block" style="margin-top:40px">
+      <h3>Как читать граф</h3>
+      <ul>
+        <li><code>related github.com --depth 2</code> — что привязано к github.com на 2 шага вглубь.</li>
+        <li><code>path a b</code> — путь между узлами. Сначала прямой, потом soft bridge через общий узел.</li>
+        <li><code>bridge a b</code> — что общего: общий ASN, NS, certificate issuer.</li>
+        <li><code>community</code> — Louvain-сообщества. Modularity &gt; 0.4 — есть структура.</li>
+      </ul>
+      <div class="annot"><strong>Совет</strong>Граф наполняется при каждом запуске <code>ip</code>, <code>domain</code>, <code>sub</code>, <code>check</code>, <code>ssl</code>, <code>web</code>, <code>takeover</code>, <code>hr-*</code>, <code>identity</code>, <code>wmn</code>. Через 20–30 целей <code>community</code> начинает показывать рабочие кластеры.</div>
+    </div>
+
+  </div>
+</section>
+<section class="section" id="obsidian">
+  <div class="wrap">
+    <div class="section-head"><span class="num">02c</span><h2>Obsidian</h2><span class="meta">перенос результатов в граф знаний</span></div>
+
+    <div class="intro" style="margin-bottom:24px">
+      <p>Obsidian — бесплатное приложение для заметок в формате Markdown с поддержкой <code>[[wikilinks]]</code>. ASTRYM выгружает любой скан в готовый vault — набор связанных заметок, которые Obsidian сразу понимает.</p>
+      <p>Зачем это нужно: можно собрать базу по клиенту или проекту, где каждое сканирование — отдельная заметка, а домены, IP и почты связаны между собой. Obsidian сам покажет граф связей и даст поиск по всему vault.</p>
+    </div>
+
+    <h3 style="font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin-bottom:12px">Что происходит при выгрузке</h3>
+    <div class="obs-steps">
+      <div class="obs-step">
+        <h4>Запуск с флагом <code>obsidian</code></h4>
+        <p>Любая команда может выгрузить в Obsidian-формат. Можно комбинировать с другими через запятую.</p>
+        <pre>python astrym.py domain github.com -f obsidian
+python astrym.py domain github.com -f json,html,obsidian</pre>
+      </div>
+      <div class="obs-step">
+        <h4>Создаётся папка <code>_obsidian</code></h4>
+        <p>Рядом с остальными результатами появится папка с суффиксом <code>_obsidian</code>. Это и есть vault — папка с .md-заметками.</p>
+        <pre>results/domain/domain1_obsidian/</pre>
+      </div>
+      <div class="obs-step">
+        <h4>Внутри — связанные заметки</h4>
+        <p>Каждая секция скана становится отдельной заметкой: DNS, WHOIS, субдомены, security, extended. Плюс — <code>index.md</code> как оглавление и <code>&lt;target&gt;.md</code> как заметка цели.</p>
+      </div>
+      <div class="obs-step">
+        <h4>Ссылки <code>[[...]]</code> связывают заметки</h4>
+        <p>Каждый домен, IP, NS в отчёте превращается в <code>[[wikilink]]</code>. Obsidian видит это как связь: открываешь github.com → сразу видно, куда ещё он ведёт.</p>
+      </div>
+      <div class="obs-step">
+        <h4>Открываешь папку в Obsidian</h4>
+        <p>В Obsidian: <code>Open folder as vault</code> → выбрать <code>results/domain/domain1_obsidian/</code>. Всё, ты внутри.</p>
+      </div>
+      <div class="obs-step">
+        <h4>Смотришь граф</h4>
+        <p>Горячая клавиша <code>Ctrl+G</code> (или иконка graph) — увидишь узлы и связи между заметками. Это локальный граф в Obsidian, независимый от SQLite-графа ASTRYM.</p>
+      </div>
+    </div>
+
+    <h3 style="font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin:32px 0 12px">Структура vault · пример</h3>
+    <div class="obs-tree">
+<span class="dir">domain1_obsidian/</span>
+├── <span class="file">index.md</span>                    <span class="d">← оглавление: ссылки на все заметки vault</span>
+├── <span class="file">_overview.md</span>               <span class="d">← главная заметка: тип, дата, риск, ссылки на секции</span>
+├── <span class="file">github.com.md</span>              <span class="d">← заметка цели: <span class="link">[[api.github.com]]</span>, <span class="link">[[gist.github.com]]</span>, ...</span>
+├── <span class="file">dns.md</span>                     <span class="d">← DNS: A/AAAA/MX/NS/TXT, таблица</span>
+├── <span class="file">whois.md</span>                   <span class="d">← WHOIS: registrar, created, expires</span>
+├── <span class="file">subdomains.md</span>              <span class="d">← субдомены как <span class="link">[[wikilinks]]</span></span>
+├── <span class="file">security.md</span>                <span class="d">← risk level + score + reasons + источники</span>
+└── <span class="file">extended.md</span>                <span class="d">← extended sources: certspotter, hackertarget, ...</span>
+    </div>
+
+    <h3 style="font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin:32px 0 12px">Что писать в какую заметку</h3>
+    <table class="flags">
+      <thead><tr><th>Заметка</th><th>Когда появляется и что внутри</th></tr></thead>
+      <tbody>
+        <tr><td>index.md</td><td>Всегда. Оглавление vault: список секций, ссылка на <code>_overview</code>.</td></tr>
+        <tr><td>_overview.md</td><td>Всегда. Тип скана, дата, уровень риска (если есть), список доступных секций.</td></tr>
+        <tr><td>&lt;target&gt;.md</td><td>Всегда. Отдельная заметка цели — чтобы Obsidian показывал backlinks: кто ещё ссылается на этот домен.</td></tr>
+        <tr><td>dns.md</td><td>Если были DNS-записи. Таблица по типам A/AAAA/MX/NS/TXT/CNAME.</td></tr>
+        <tr><td>whois.md</td><td>Если есть WHOIS. Таблица registrar / creation date / expiry / NS.</td></tr>
+        <tr><td>subdomains.md</td><td>Если есть субдомены (CT или sub-скан). Таблица host / sources.</td></tr>
+        <tr><td>security.md</td><td>Если есть risk или security-блок. Level, score, все reasons, разбивка по источникам.</td></tr>
+        <tr><td>extended.md</td><td>Если были extended-источники (<code>-x</code>). Секция по каждому источнику + ссылки на внешние сервисы.</td></tr>
+        <tr><td>hudsonrock.md</td><td>Для <code>hr-email</code>, <code>hr-username</code>, <code>hr-domain</code>. Таблица stealers / employees.</td></tr>
+        <tr><td>identity.md</td><td>Для <code>identity</code>. Секции emails / phones / usernames / leaks / stealers / wmn.</td></tr>
+        <tr><td>wmn.md</td><td>Для <code>wmn</code>. Список найденных сайтов, каждый — ссылка.</td></tr>
+        <tr><td>leakcheck.md</td><td>Для <code>leakcheck</code>. Источники + поля.</td></tr>
+        <tr><td>email_full.md</td><td>Для <code>email-full</code>. Сводка по всем leak-источникам.</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin:32px 0 12px">Куда идти дальше в Obsidian</h3>
+    <div class="read-block">
+      <p><strong>Graph view.</strong> <code>Ctrl+G</code> — граф всех заметок и их связей. Если в vault много субдоменов, картинка становится интересной. Хорошо для презентации клиенту.</p>
+      <p><strong>Backlinks.</strong> Открываешь <code>github.com.md</code> — в правой панели видишь, кто ссылается на эту заметку. Это все домены, где упомянут github.com как субдомен или NS.</p>
+      <p><strong>Search.</strong> <code>Ctrl+Shift+F</code> — полнотекстовый поиск по всему vault. Работает быстрее, чем <code>astrym search</code>, потому что это локальный Markdown.</p>
+      <p><strong>Tags.</strong> В <code>frontmatter</code> каждой заметки есть <code>tags: [astrym, osint, domain]</code>. Можно фильтровать по ним: показать все заметки с тегом <code>phishing</code> (это те, где <code>risk: phishing</code>).</p>
+    </div>
+
+    <h3 style="font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin:32px 0 12px">Совмещение с остальными форматами</h3>
+    <div class="read-block">
+      <p>Obsidian не заменяет остальные форматы, а дополняет их. Рабочая связка:</p>
+      <ul>
+        <li><code>-f json</code> — сырые данные, скормить другой утилите или в CI.</li>
+        <li><code>-f html</code> — открыть в браузере, показать коллеге.</li>
+        <li><code>-f xlsx</code> — Excel/Sheets, если нужно передать таблицу.</li>
+        <li><code>-f obsidian</code> — долговременное хранение в базе знаний.</li>
+      </ul>
+      <p>Всё вместе: <code>-f json,html,xlsx,obsidian</code> — получишь четыре представления одного скана.</p>
+    </div>
+
+  </div>
+</section>
+
+<section class="section" id="flags">
+  <div class="wrap">
+    <div class="section-head"><span class="num">03</span><h2>Флаги</h2><span class="meta">глобальные, работают с любой командой</span></div>
+    <table class="flags">
+      <thead><tr><th>Флаг</th><th>Что делает</th></tr></thead>
+      <tbody>
+        <tr><td>-x, --extras</td><td>Расширенный режим: подключает дополнительные источники.</td></tr>
+        <tr><td>-f, --format</td><td><code>console</code>, <code>json</code>, <code>html</code>, <code>csv</code>, <code>md</code>, <code>pdf</code>, <code>topology</code>, <code>xlsx</code>, <code>neo4j</code>, <code>obsidian</code>, <code>all</code>.</td></tr>
+        <tr><td>-w, --workers</td><td>Число воркеров (по умолчанию 40).</td></tr>
+        <tr><td>--fast</td><td>Профиль aggressive (workers=150).</td></tr>
+        <tr><td>--stealth</td><td>Профиль stealth (медленный, вежливый).</td></tr>
+        <tr><td>--security, -s</td><td>Включить security-проверки.</td></tr>
+        <tr><td>--enrich</td><td>Обогащение перед Jira/Linear.</td></tr>
+        <tr><td>--no-color</td><td>Отключить цвета и эмодзи (для grep).</td></tr>
+        <tr><td>--json-only</td><td>Печатать только JSON.</td></tr>
+        <tr><td>--check-updates</td><td>Проверить обновления ASTRYM.</td></tr>
+        <tr><td>--tor</td><td>Ходить через Tor SOCKS.</td></tr>
+        <tr><td>--proxy-list</td><td>Файл со списком прокси (round-robin).</td></tr>
+        <tr><td>--random-ua</td><td>Случайный User-Agent.</td></tr>
+        <tr><td>--no-probe</td><td>Не делать HTTP-пробу (sub).</td></tr>
+        <tr><td>--no-permute</td><td>Не делать перестановки субдоменов (sub).</td></tr>
+        <tr><td>-W, --wordlist</td><td>Свой wordlist для sub.</td></tr>
+        <tr><td>--port N</td><td>Порт (ssl, tls-fingerprint).</td></tr>
+        <tr><td>--depth N</td><td>Глубина (related, tree, subgraph).</td></tr>
+        <tr><td>--ws &lt;name&gt;</td><td>Workspace графа (R3).</td></tr>
+        <tr><td>--ws-list</td><td>Показать все workspaces.</td></tr>
+        <tr><td>--cron "..."</td><td>Cron-выражение для <code>schedule-add</code> (R6).</td></tr>
+        <tr><td>--alert-on a,b</td><td>Типы алертов: new-subdomain, ip-change, mx-change, ... (R6).</td></tr>
+        <tr><td>--due</td><td>Прогнать только due-задачи (schedule-run).</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="section" id="changelog">
+  <div class="wrap">
+    <div class="section-head"><span class="num">04</span><h2>История</h2><span class="meta">последние изменения</span></div>
+    <div class="intro" style="margin-bottom:24px">
+      <p><strong>Сводка по версиям:</strong> 0.7.6 beta &rarr; 0.7.6.1 beta &rarr; 0.7.7 beta &rarr; 0.8.0 beta (R6&ndash;R13) &rarr; 0.9.x beta (R14&ndash;R30) &rarr; 1.0.0 release (R31&ndash;R40, 122 команды) &rarr; <strong>1.0.1 minimum update</strong> (R41: +4 команды, локальные базы) &rarr; <strong>2.0.0 latest</strong> (R42: офлайн-режим, фиксы).</p>
+    </div>
+
+
+    <!-- R14-R40 BLOCKS -->
+<div class="release">
+  <div class="rel-meta"><div class="tag">R68</div><div class="date">2026 &middot; локальные базы</div></div>
+  <div class="rel-body">
+    <h3>4 новые офлайн-базы + 94 ASN</h3>
+    <ul>
+      <li><code>ip2region_v4.xdb</code> + <code>ip2region_v6.xdb</code> &mdash; city / province / ISP за 10µs.</li>
+      <li><code>oui-master.db</code> &mdash; 59k OUI + категории устройств (Router / Laptop / Modem).</li>
+      <li><code>as-ip-blocks/</code> &mdash; 94 ASN × IPv4 + IPv6 префиксы.</li>
+      <li>Рендеры <code>local_prefixes</code>: JSON, HTML, MD, XLSX, CLI.</li>
+      <li><code>ahmia</code> и <code>darkweb</code> временно отключены.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="release">
+  <div class="rel-meta"><div class="tag">R41</div><div class="date">2026 &middot; локальные базы</div></div>
+  <div class="rel-body">
+    <h3>Офлайн-режим: 14 открытых баз</h3>
+    <ul>
+      <li><code>astrym_db.py</code> &mdash; скачивание и обновление GeoLite2, DB-IP, RIR, IEEE OUI, iptoasn.</li>
+      <li>Команда <code>mac</code> &mdash; вендор по MAC через IEEE OUI (MA-L/M/S).</li>
+      <li>Команда <code>ip-local</code> &mdash; ASN по IPv4/IPv6 из локальной <code>asn.db</code> и <code>GeoLite2-ASN.mmdb</code>.</li>
+      <li>Команды <code>db-status</code> и <code>db-sync</code> &mdash; статус и обновление баз.</li>
+      <li><strong>Fallback в <code>ip</code></strong>: при отсутствии сети &mdash; ASN, страна, город из локальных баз. Автодетект через <code>_has_internet()</code>.</li>
+      <li>HTML и MD-рендеры для новых команд.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="release">
+  <div class="rel-meta"><div class="tag">R51</div><div class="date">2026 &middot; офлайн-базы</div></div>
+  <div class="rel-body">
+    <h3>+4 офлайн-базы</h3>
+    <ul>
+      <li><code>ip2region</code> (IPv4 + IPv6) &mdash; city / province / ISP за 10µs.</li>
+      <li><code>oui-master.db</code> &mdash; 59k OUI + категории устройств (Router / Laptop / Modem).</li>
+      <li><code>as-ip-blocks</code> &mdash; IPv4 + IPv6 префиксы AS.</li>
+      <li>Fallback в <code>ip</code> и <code>lookup_mac</code> обновлены под новые базы.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="release">
+  <div class="rel-meta"><div class="tag">R40</div><div class="date">2026 &middot; webui</div></div>
+  <div class="rel-body">
+    <h3>STIX / Monitor в WebUI</h3>
+    <ul>
+      <li>Раздел STIX — просмотр и выгрузка bundle из WebUI.</li>
+      <li>Раздел Monitor — живые цели, статус, последние события.</li>
+      <li>Навигация WebUI расширена: STIX | Monitor в шапке.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="release">
+  <div class="rel-meta"><div class="tag">R38</div><div class="date">2026 &middot; net+graphql</div></div>
+  <div class="rel-body">
+    <h3>AUTOINSTALL + чистка</h3>
+    <ul>
+      <li><code>ASTRYM_AUTOINSTALL</code> — автоустановка зависимостей при старте.</li>
+      <li>Dedup только для <code>enrich</code>.</li>
+      <li>Stealth-профиль: circuit breaker отключён.</li>
+      <li>GraphQL resolver убран из <code>DISPATCH</code>.</li>
+      <li><code>ASTRYM_BRAND_CSS</code> переехал в один модуль.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="release">
+  <div class="rel-meta"><div class="tag">R35</div><div class="date">2026 &middot; webui</div></div>
+  <div class="rel-body">
+    <h3>Глобальный fetch-writer</h3>
+    <ul>
+      <li>Все <code>fetch()</code> в WebUI пробрасывают <code>?key=</code> в API-запросы.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="release">
+  <div class="rel-meta"><div class="tag">R33</div><div class="date">2026 &middot; help</div></div>
+  <div class="rel-body">
+    <h3>Группы команд по типу цели</h3>
+    <ul>
+      <li><code>by_target_group</code> — группировка команд в help.</li>
+      <li>RUN grouped — команды по типу цели, а не по алфавиту.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="release">
+  <div class="rel-meta"><div class="tag">R30</div><div class="date">2026 &middot; graph</div></div>
+  <div class="rel-body">
+    <h3>Pinned nodes + drag</h3>
+    <ul>
+      <li>Узлы графа можно пинить: <code>node_id -&gt; {x, y}</code>.</li>
+      <li>Unified drag: mouse + touch, pin on release, короткий тап = клик.</li>
+      <li>Сохранение и загрузка fixed positions между сессиями.</li>
+      <li><code>/graph/state.json</code> — отдельный эндпоинт для UI-состояния.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="release">
+  <div class="rel-meta"><div class="tag">R29</div><div class="date">2026 &middot; graph</div></div>
+  <div class="rel-body">
+    <h3>Связи через общий узел</h3>
+    <ul>
+      <li>Блок «Связи с другими целями» в панели узла.</li>
+      <li>Repulsion с жёстким радиусом.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="release">
+  <div class="rel-meta"><div class="tag">R28</div><div class="date">2026 &middot; webui</div></div>
+  <div class="rel-body">
+    <h3>Presets + view</h3>
+    <ul>
+      <li>Пресеты отображения графа.</li>
+      <li>Переключение view без перезагрузки.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="release">
+  <div class="rel-meta"><div class="tag">R27</div><div class="date">2026 &middot; webui</div></div>
+  <div class="rel-body">
+    <h3>?key= из URL</h3>
+    <ul>
+      <li>WebUI пробрасывает <code>?key=...</code> из URL в <code>fetch</code>.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="release">
+  <div class="rel-meta"><div class="tag">R25</div><div class="date">2026 &middot; security</div></div>
+  <div class="rel-body">
+    <h3>Жёсткая auth</h3>
+    <ul>
+      <li>Без ключей — отказ.</li>
+      <li>Жёсткая auth для SSE.</li>
+      <li>CORS headers removed.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="release">
+  <div class="rel-meta"><div class="tag">R24</div><div class="date">2026 &middot; security</div></div>
+  <div class="rel-body">
+    <h3>Whitelist + headers</h3>
+    <ul>
+      <li>CORS removed.</li>
+      <li>Security headers по умолчанию.</li>
+      <li>Whitelist первой команды.</li>
+      <li>Отказ от non-loopback bind без ключей.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="release">
+  <div class="rel-meta"><div class="tag">R23</div><div class="date">2026 &middot; enrich</div></div>
+  <div class="rel-body">
+    <h3>ENRICH</h3>
+    <ul>
+      <li>Правки в <code>enrich</code>.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="release">
+  <div class="rel-meta"><div class="tag">R21</div><div class="date">2026 &middot; sub</div></div>
+  <div class="rel-body">
+    <h3>Subdomains guard</h3>
+    <ul>
+      <li>Защита от <code>None</code> / не-list в результатах sub.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="release">
+  <div class="rel-meta"><div class="tag">R20</div><div class="date">2026 &middot; render</div></div>
+  <div class="rel-body">
+    <h3>Global _SPECIAL_RENDER</h3>
+    <ul>
+      <li>Один <code>_SPECIAL_RENDER</code> на весь проект.</li>
+      <li>Рендеры для late-registered команд.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="release">
+  <div class="rel-meta"><div class="tag">R19</div><div class="date">2026 &middot; help+render</div></div>
+  <div class="rel-body">
+    <h3>HELP + ASN render</h3>
+    <ul>
+      <li>Расширенный <code>help</code>.</li>
+      <li>ASN в спец-рендерах.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="release">
+  <div class="rel-meta"><div class="tag">R18</div><div class="date">2026 &middot; stats</div></div>
+  <div class="rel-body">
+    <h3>STATS</h3>
+    <ul>
+      <li>Расширена команда <code>stats</code>.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="release">
+  <div class="rel-meta"><div class="tag">R17</div><div class="date">2026 &middot; xlsx</div></div>
+  <div class="rel-body">
+    <h3>no-op</h3>
+    <ul>
+      <li>Все R8b-листы дублировали R13 — удалены.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="release">
+  <div class="rel-meta"><div class="tag">R16</div><div class="date">2026 &middot; xlsx</div></div>
+  <div class="rel-body">
+    <h3>Kill R8b chain</h3>
+    <ul>
+      <li>Убрана цепочка R8b.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="release">
+  <div class="rel-meta"><div class="tag">R14</div><div class="date">2026 &middot; site</div></div>
+  <div class="rel-body">
+    <h3>Цветные строки XLSX на сайте</h3>
+    <ul>
+      <li>CSS для <code>.row-ok</code>, <code>.row-warn</code>, <code>.row-err</code>.</li>
+    </ul>
+  </div>
+</div>
+<!-- END R14-R40 BLOCKS -->
+
+<div class="release">
+      <div class="rel-meta"><div class="tag">R13</div><div class="date">2026 &middot; xlsx</div></div>
+      <div class="rel-body">
+        <h3>XLSX пересобран с нуля</h3>
+        <ul>
+          <li>Фиксированные листы: <code>01_summary</code>, <code>02_key_data</code>, <code>03_consensus</code>, <code>04_*</code>, <code>05_extended</code>, <code>99_raw</code>, <code>!failed</code>.</li>
+          <li>Цветные метки: <code>confirmed</code> — зелёный, <code>weak</code> — жёлтый, <code>conflict</code> — красный.</li>
+          <li><code>!failed</code> — лист с упавшими extended-источниками, красным.</li>
+          <li>Env: <code>ASTRYM_XLSX_RAW=0</code>, <code>ASTRYM_XLSX_COLOR=0</code>.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="release">
+      <div class="rel-meta"><div class="tag">R12</div><div class="date">2026 &middot; extended</div></div>
+      <div class="rel-body">
+        <h3>Параллельный extended</h3>
+        <ul>
+          <li><code>_x_ip</code> — 6 источников параллельно через ThreadPool, таймаут 5с.</li>
+          <li>Общий cap 10с — команда больше не висит 40 секунд.</li>
+          <li><code>team_cymru</code> заменён на <code>ripe_stat</code>.</li>
+          <li><code>extended._failed</code> — короткий список в JSON, подробно в консоли.</li>
+          <li>Env: <code>ASTRYM_EXT_TIMEOUT</code>, <code>ASTRYM_EXT_TOTAL</code>, <code>ASTRYM_EXT_WORKERS</code>, <code>ASTRYM_EXT_QUIET</code>.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="release">
+      <div class="rel-meta"><div class="tag">R10&ndash;R11</div><div class="date">2026 &middot; сайт</div></div>
+      <div class="rel-body">
+        <h3>Новый site.html + реальные превью</h3>
+        <ul>
+          <li>Полностью переписан лендинг: fade/blur-переход между секциями.</li>
+          <li>Раздел «Чтение вывода» с реальными превью: CLI, HTML, XLSX, Markdown, topology.</li>
+          <li>Раздел «Obsidian» — пошагово со структурой vault.</li>
+          <li>Тёмная тема, фиксированный логотип, шорткаты <code>g c/v/o/a/r/i/f/h/d/n/t</code>.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="release">
+      <div class="rel-meta"><div class="tag">R8&ndash;R9</div><div class="date">2026 &middot; граф+экспорт</div></div>
+      <div class="rel-body">
+        <h3>Новые данные — в граф и в экспорт</h3>
+        <ul>
+          <li><code>hr-*</code>, <code>identity</code>, <code>wmn</code>, <code>leakcheck</code>, <code>email-full</code> теперь пишутся в SQLite-граф.</li>
+          <li>XLSX-листы <code>hr_stealers</code>, <code>hr_employees</code>, <code>identity_*</code>, <code>wmn_found</code>.</li>
+          <li>HTML-рендеры для 14 новых типов — со структурой, не сырой JSON.</li>
+          <li>Obsidian-заметки <code>hudsonrock.md</code>, <code>identity.md</code>, <code>wmn.md</code>.</li>
+          <li>WMN: 500+ сайтов параллельно, thread-safe sessions, прогресс, статус <code>unknown</code>.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="release">
+      <div class="rel-meta"><div class="tag">R6&ndash;R7</div><div class="date">2026 &middot; автоматика</div></div>
+      <div class="rel-body">
+        <h3>Schedule + Hudson Rock retry</h3>
+        <ul>
+          <li><code>schedule-add --cron</code> — настоящие 5-польные cron-выражения.</li>
+          <li><code>schedule-add --alert-on new-subdomain,ip-change</code> — алерты по типам событий.</li>
+          <li><code>schedule-run --due</code> — для внешнего crontab / termux-job-scheduler.</li>
+          <li>Hudson Rock: retry при 429 с учётом <code>Retry-After</code>, кэш ответов на 24 часа.</li>
+          <li><code>hr-status</code> — состояние клиента (429/retries/cache hits).</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="release">
+      <div class="rel-meta"><div class="tag">R1&ndash;R5</div><div class="date">2026 &middot; фундамент</div></div>
+      <div class="rel-body">
+        <h3>Lazy / ProcessPool / Workspaces / RateLimit / PDF</h3>
+        <ul>
+          <li>Lazy import <code>rich</code>, <code>reportlab</code>, <code>phonenumbers</code> — старт в 3&ndash;5 раз быстрее.</li>
+          <li>Threat intel через ProcessPool с жёстким таймаутом вместо threads-fallback.</li>
+          <li>Workspaces графа: <code>--ws client1</code>, отдельная БД <code>ws_client1.db</code>.</li>
+          <li>RateLimit в serve.py: token bucket на IP, 429 + <code>Retry-After</code>.</li>
+          <li>PDF реанимирован: reportlab → fpdf2 fallback, авто-поиск TTF.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="release">
+      <div class="rel-meta"><div class="tag">section C</div><div class="date">2026 &middot; QoL</div></div>
+      <div class="rel-body">
+        <h3>Качество жизни</h3>
+        <ul>
+          <li>Флаги <code>--no-color</code> и <code>--json-only</code> — учитываются везде.</li>
+          <li>Команда <code>help [cmd]</code> — справка по любой команде.</li>
+          <li>Команда <code>completion bash|zsh</code> — автодополнение.</li>
+          <li>Команда <code>check-updates</code> — проверка GitHub releases.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="release">
+      <div class="rel-meta"><div class="tag">section B</div><div class="date">2026 &middot; данные</div></div>
+      <div class="rel-body">
+        <h3>Правильные данные</h3>
+        <ul>
+          <li>RDAP вместо WHOIS по умолчанию, WHOIS как fallback.</li>
+          <li>DNSSEC chain validation через DNSViz.</li>
+          <li>4-й источник CT — <code>ct.grepular.com</code>.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="release">
+      <div class="rel-meta"><div class="tag">section A</div><div class="date">2026 &middot; фундамент</div></div>
+      <div class="rel-body">
+        <h3>Универсальный кэш + stats</h3>
+        <ul>
+          <li>Единый дисковый кэш для RIPE/PeeringDB/внешних API.</li>
+          <li>Команда <code>stats</code> — сводка по графу, кэшу, results, search.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="release">
+      <div class="rel-meta"><div class="tag">1.0.1 минимальное обновление</div><div class="date">2026 &middot; локальные базы</div></div>
+      <div class="rel-body">
+        <h3>Enrich v1.0.1</h3>
+        <ul>
+          <li>Прогресс по шагам, <code>--fast</code>, <code>--no-typosquat</code>.</li>
+          <li>Push в MISP/OpenCTI прямо из enrich.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="release">
+      <div class="rel-meta"><div class="tag">1.0.0 релиз</div><div class="date">2026 &middot; serve</div></div>
+      <div class="rel-body">
+        <h3>Serve / API v1.0.0</h3>
+        <ul>
+          <li>REST API + WebUI + GraphQL на <code>127.0.0.1:8080</code>.</li>
+          <li>Параллельный <code>_handle_batch</code>, MAX_BATCH=20.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="release">
+      <div class="rel-meta"><div class="tag">0.9.x бета</div><div class="date">2026 &middot; экспорт</div></div>
+      <div class="rel-body">
+        <h3>STIX / MISP / OpenCTI v0.9.x</h3>
+        <ul>
+          <li>STIX 2.1 с location, sector, vulnerability, relationship.</li>
+          <li>Push в MISP и OpenCTI. Экспорт XLSX/Neo4j/Obsidian.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="release">
+      <div class="rel-meta"><div class="tag">0.8.0 beta</div><div class="date">2026 &middot; ядро</div></div>
+      <div class="rel-body">
+        <h3>Graph + Alerts v0.8.0</h3>
+        <ul>
+          <li>SQLite-граф: nodes/edges/scans/snapshots, дедупликация.</li>
+          <li>Алерты: Telegram, Discord, webhook.</li>
+          <li>Passive DNS: OTX + CIRCL + VT.</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+<section class="section" id="archive">
+  <div class="wrap">
+    <div class="section-head"><span class="num">05</span><h2>Архив</h2><span class="meta">первые версии &middot; июнь 2026</span></div>
+
+    <div class="intro" style="margin-bottom:32px">
+      <p>До того как ASTRYM стал модульным графом на 126 команд, он был одним файлом. Ниже — три самые первые версии, с реальным выводом в терминале и с тем, <strong>что каждая из них дала</strong>.</p>
+    </div>
+
+    <h3 style="font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin-bottom:8px">Эволюция по цифрам</h3>
+    <table class="evo">
+      <thead>
+        <tr>
+          <th>Версия</th>
+          <th>Команд</th>
+          <th>Строк</th>
+          <th>Файлов</th>
+          <th>Что нового</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>0.7.6 beta</td><td><span class="bar" style="width:8px"></span>9</td><td>~1 400</td><td>1</td><td>ip, domain, dns, sub, email, check, scan, phone, darkweb</td></tr>
+        <tr><td>0.7.6.1 beta</td><td><span class="bar" style="width:8px"></span>9</td><td>~1 420</td><td>1</td><td>ASCII-баннер, <code>--help</code>, парсер CLI</td></tr>
+        <tr><td>0.7.7 beta</td><td><span class="bar" style="width:18px"></span>17</td><td>~3 000</td><td>1</td><td>+ssl, takeover, web, origin, whois-history, watch, batch, leak. Плагины, CSV, diff-снапшоты</td></tr>
+        <tr><td>0.8.0 beta</td><td><span class="bar" style="width:45px"></span>~50</td><td>~12 000</td><td>15</td><td>Переход на модули. SQLite-граф. +stix, gexf, xlsx</td></tr>
+        <tr><td>0.9.x beta</td><td><span class="bar" style="width:85px"></span>~100</td><td>~30 000</td><td>45</td><td>+neo4j, obsidian. R14&ndash;R30: STIX-граф, Louvain, timeline</td></tr>
+        <tr><td>1.0.0 release</td><td><span class="bar" style="width:100px"></span>122</td><td>~45 000</td><td>60</td><td>+misp, opencti, alerts. R31&ndash;R40: STIX/Monitor в WebUI</td></tr>
+        <tr><td>1.0.1 minimum update</td><td><span class="bar" style="width:100px"></span>126</td><td>~45 500</td><td>60</td><td>R41: локальные базы. <code>db-sync</code>, <code>mac</code>, <code>ip-local</code></td></tr>
+        <tr><td>2.0.0 latest</td><td><span class="bar" style="width:110px"></span>126</td><td>~46 000</td><td>77</td><td>Офлайн-режим: fallback в <code>ip</code>, <code>mac</code>, <code>ip-local</code>, <code>db-status</code>, <code>db-sync</code></td></tr>
+      </tbody>
+    </table>
+
+    <div class="commit">
+      <span class="hash">commit a3f9c1e</span>
+      <span class="date">(июнь 2026, самый первый файл)</span><br>
+      <span class="msg">initial: single-file OSINT utility</span><br>
+      <span class="stat">1 file changed, 1421 insertions(+)</span>
+      <div class="body">
+        <div>astrym.py | 1421 +++++++++++++++++++++++++++++++++++</div>
+        <div style="margin-top:6px">ip · domain · dns · sub · email · check · scan · phone · darkweb</div>
+      </div>
+    </div>
+
+    <div class="archive-card" style="margin-top:32px">
+      <div class="archive-head">
+        <span class="archive-ver">v 0.7.6 beta</span>
+        <span class="archive-date">Первый публичный · single-file</span>
+      </div>
+      <div class="archive-desc">
+        Один файл <code>astrym.py</code>. Только ASCII-баннер, базовая палитра, 9 команд.
+        WHOIS через TCP :43, CT через crt.sh, DNSBL через socket, GeoIP через ip-api.com.
+        Уже тогда — <code>-x</code> для расширенного режима.
+      </div>
+      <div class="archive-gain">
+        <strong>Что это дало</strong>
+        Рабочий цикл целиком в одном файле: собрал, посмотрел, выгрузил. Никаких зависимостей кроме
+        <code>requests</code> и <code>dnspython</code>, никакой установки — просто <code>python astrym.py ip 8.8.8.8</code>.
+      </div>
+      <div class="term">
+        <div class="term-bar">
+          <span class="dot3"><span></span><span></span><span></span></span>
+          <span class="title">astrym 0.7.6 beta — ip 8.8.8.8</span>
+        </div>
+        <div class="term-body">
+<span class="p">    _    ___ _____ ___ ______   __</span>
+<span class="p">   /_\  / __|_   _| _ \_  _\ \ / /</span>
+<span class="p">  / _ \ \__ \ | | |   / || | \ V /</span>
+<span class="p"> /_/ \_\___/ |_| |_|_\___|  |_|</span>
+<span class="d">OSINT utility  .  IP . Domain . DNS . Email . Phone . Darkweb</span>
+
+<span class="b">╭────────────────── ASTRYM  .  IP Analysis ──────────────────╮</span>
+<span class="b">│</span> 8.8.8.8                                                    <span class="b">│</span>
+<span class="b">╰────────────────────────────────────────────────────────────╯</span>
+
+<span class="p">── Overview ────────────────────────────────────────────────</span>
+  Address    8.8.8.8
+  Version    IPv4
+  PTR        dns.google
+  Private    no
+  Country    United States [US]
+  Region     California
+  City       Mountain View
+  ISP        Google LLC
+  Org        Google Public DNS
+  ASN        AS15169 Google LLC
+
+<span class="p">── Reputation . DNSBL ──────────────────────────────────────</span>
+  Spamhaus ZEN     <span class="g">clean</span>
+  SpamCop          <span class="g">clean</span>
+  Barracuda        <span class="g">clean</span>
+  SORBS            <span class="g">clean</span>
+  Spamhaus PBL     <span class="g">clean</span>
+
+<span class="p">── WHOIS ───────────────────────────────────────────────────</span>
+  netrange           8.8.8.0 - 8.8.8.255
+  netname            GOOGLE-PUBLIC-DNS
+  orgname            Google LLC
+  country            US
+  regdate            2022-12-01
+  updated            2024-06-15
+
+<span class="d">. auto-output: results/ip/ip1.*</span>
+<span class="g">[+] JSON  -> results/ip/ip1.json</span>
+<span class="g">[+] HTML  -> results/ip/ip1.html</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="archive-card">
+      <div class="archive-head">
+        <span class="archive-ver">v 0.7.6.1 beta</span>
+        <span class="archive-date">Правка баннера · ASCII-only</span>
+      </div>
+      <div class="archive-desc">
+        Баннер переехал с «неровного» <code>/_\</code> на честный ASCII — чтобы не разъезжался в PyDroid и Termux.
+        Появился <code>--help</code>, аккуратный парсер CLI, превью-блок «Tip» при запуске без аргументов.
+      </div>
+      <div class="archive-gain">
+        <strong>Что это дало</strong>
+        Перестал пугать новых пользователей. Первое впечатление — важнее фич. Тот же функционал,
+        но выглядит как инструмент, а не как учебный скрипт.
+      </div>
+      <div class="term">
+        <div class="term-bar">
+          <span class="dot3"><span></span><span></span><span></span></span>
+          <span class="title">astrym 0.7.6.1 beta — domain example.com -x</span>
+        </div>
+        <div class="term-body">
+<span class="p">    ___   _____ _______ ______   __  __</span>
+<span class="p">   / _ | / ___//__  __// __  \  \ \/ /</span>
+<span class="p">  / __ | \__ \  / /  / /_/ / /   \  /</span>
+<span class="p"> /_/ |_|/____/ /_/   \____/ /    /_/</span>
+<span class="d">OSINT utility  |  IP . Domain . DNS . Email . Phone . Darkweb</span>
+
+<span class="b">╭──────────────── ASTRYM  .  DOMAIN Analysis ────────────────╮</span>
+<span class="b">│</span> example.com  <span class="y">[+extras]</span>                                    <span class="b">│</span>
+<span class="b">╰────────────────────────────────────────────────────────────╯</span>
+
+<span class="p">── DNS Records ─────────────────────────────────────────────</span>
+  A       93.184.216.34
+  AAAA    2606:2800:220:1:248:1893:25c8:1946
+  MX      0 .
+  NS      a.iana-servers.net
+  NS      b.iana-servers.net
+  TXT     v=spf1 -all
+
+<span class="p">── Email Security ──────────────────────────────────────────</span>
+  SPF      <span class="r">not found</span>
+  DMARC    <span class="r">not found</span>
+  DKIM     <span class="r">no common selectors</span>
+
+<span class="p">── Subdomains . CT ──────────────────────────────────────────</span>
+  <span class="g">[+]</span> Found 3 in CT logs
+  . www.example.com
+  . m.example.com
+  . dev.example.com
+
+<span class="p">── Extended sources ────────────────────────────────────────</span>
+  <span class="p">certspotter</span> (3)
+  <span class="p">hackertarget</span> (2)
+  <span class="p">anubisdb</span> (1)
+  <span class="p">otx_passive</span> (4)
+
+<span class="d">. auto-output: results/domain/domain1.*</span>
+<span class="g">[+] JSON  -> results/domain/domain1.json</span>
+<span class="g">[+] HTML  -> results/domain/domain1.html</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="archive-card">
+      <div class="archive-head">
+        <span class="archive-ver">v 0.7.7 beta</span>
+        <span class="archive-date">Adv · Batch · Watch · Plugins</span>
+      </div>
+      <div class="archive-desc">
+        Резкий скачок. Появились 8 новых команд: <code>ssl</code>, <code>takeover</code>,
+        <code>leak</code>, <code>screenshot</code>, <code>web</code>, <code>origin</code>,
+        <code>whois-history</code>, <code>watch</code>, <code>batch</code>. Плагины из
+        <code>~/.astrym/plugins/</code>. CSV-экспорт. Diff-снапшоты для watch. Это последняя
+        single-file версия перед переходом на модули 8.x.
+      </div>
+      <div class="archive-gain">
+        <strong>Что это дало</strong>
+        Файл дорос до 3000 строк — стало очевидно, что один <code>.py</code> больше не тянет.
+        Именно на этой версии стало понятно: либо пилить в модули, либо хоронить проект.
+        Дальше — 8.0 и граф SQLite.
+      </div>
+      <div class="arch-row two">
+        <div>
+          <div class="term">
+            <div class="term-bar">
+              <span class="dot3"><span></span><span></span><span></span></span>
+              <span class="title">ssl example.com</span>
+            </div>
+            <div class="term-body">
+<span class="p">── Certificate ─────────────────────────────────</span>
+  Protocol       TLSv1.3
+  Cipher         TLS_AES_256_GCM_SHA384
+  Subject CN     example.com
+  Issuer CN      DigiCert TLS RSA SHA256
+  Not before     Nov  1 00:00:00 2025
+  Not after      Nov  1 23:59:59 2026
+  Days valid     412
+  <span class="g">[+]</span> valid
+
+<span class="p">── Subject Alt Names (3) ───────────────────────</span>
+  example.com
+  www.example.com
+  m.example.com
+
+<span class="p">── Deprecated protocols ────────────────────────</span>
+  <span class="g">[+]</span> none
+
+<span class="p">── HSTS ────────────────────────────────────────</span>
+  <span class="g">[+]</span> max-age=31536000; includeSubDomains
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="term">
+            <div class="term-bar">
+              <span class="dot3"><span></span><span></span><span></span></span>
+              <span class="title">watch github.com</span>
+            </div>
+            <div class="term-body">
+<span class="b">╭────────────── ASTRYM  .  Watch diff ──────────────╮</span>
+<span class="b">│</span> github.com                                       <span class="b">│</span>
+<span class="b">╰───────────────────────────────────────────────────╯</span>
+
+<span class="p">── Added ───────────────────────────────────────────</span>
+<span class="g">+ ct: api.github.io</span>
+<span class="g">+ ct: staging.github.com</span>
+<span class="g">+ dns: A 140.82.121.5</span>
+
+<span class="p">── Removed ─────────────────────────────────────────</span>
+<span class="r">- dns: A 140.82.121.3</span>
+
+<span class="p">── Changed ─────────────────────────────────────────</span>
+  whois registrar: MarkMonitor Inc -> MarkMonitor
+  risk score: 5 -> 12
+
+<span class="g">[+]</span> watch updated: ~/.astrym/watches/github.com.json
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="term" style="margin-top:20px">
+        <div class="term-bar">
+          <span class="dot3"><span></span><span></span><span></span></span>
+          <span class="title">batch -i targets.txt -f all -x</span>
+        </div>
+        <div class="term-body">
+<span class="d">. batch: 4 targets</span>
+<span class="p">── [1/4] 8.8.8.8 ────────────────────────────────</span>
+  Country    United States [US]
+  ISP        Google LLC
+  ASN        AS15169
+<span class="p">── [2/4] 1.1.1.1 ────────────────────────────────</span>
+  Country    Australia [AU]
+  ISP        Cloudflare, Inc.
+  ASN        AS13335
+<span class="p">── [3/4] github.com ─────────────────────────────</span>
+  Country    United States [US]
+  CT subs    37
+  SSL        <span class="g">valid 87d</span>
+<span class="p">── [4/4] example.com ────────────────────────────</span>
+  Country    United States [US]
+  CT subs    3
+  SSL        <span class="g">valid 412d</span>
+
+<span class="p">── Summary ─────────────────────────────────────────</span>
+<span class="b">┏━━━┳━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━┓</span>
+<span class="b">┃ # ┃ target      ┃ kind   ┃ result          ┃</span>
+<span class="b">┡━━━╇━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━┩</span>
+<span class="b">│</span> 1 <span class="b">│</span> 8.8.8.8     <span class="b">│</span> ip     <span class="b">│</span> US              <span class="b">│</span>
+<span class="b">│</span> 2 <span class="b">│</span> 1.1.1.1     <span class="b">│</span> ip     <span class="b">│</span> AU              <span class="b">│</span>
+<span class="b">│</span> 3 <span class="b">│</span> github.com  <span class="b">│</span> domain <span class="b">│</span> 37 CT sub(s)    <span class="b">│</span>
+<span class="b">│</span> 4 <span class="b">│</span> example.com <span class="b">│</span> domain <span class="b">│</span> 3 CT sub(s)     <span class="b">│</span>
+<span class="b">└───┴─────────────┴────────┴─────────────────┘</span>
+<span class="g">[+]</span> Total: 4
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin-top:40px;margin-bottom:8px">Преемственность</h3>
+    <div class="intro" style="margin-bottom:16px">
+      <p>ASTRYM не переписывался — он рос. Эти вещи пережили все рефакторинги, начиная с первой версии 7.6.0.</p>
+    </div>
+    <div class="persist">
+      <div class="persist-item"><code>meta = {type, target, generated_at, tool}</code>в каждом результате, с 7.6.0</div>
+      <div class="persist-item"><code>-x / --extras</code>расширенный режим, с 7.6.0</div>
+      <div class="persist-item"><code>results/&lt;kind&gt;/&lt;kind&gt;N.ext</code>раскладка экспорта, с 7.6.0</div>
+      <div class="persist-item"><code>check &lt;target&gt;</code>threat intel, с 7.6.0</div>
+      <div class="persist-item"><code>scan &lt;target&gt;</code>авто-детект, с 7.6.1</div>
+      <div class="persist-item"><code>--security</code>добавить проверки к ip/domain, с 7.6.0</div>
+      <div class="persist-item"><code>-f json,html,pdf</code>три формата экспорта, с 7.6.0</div>
+      <div class="persist-item"><code>history.json</code>что и когда сканировалось, с 7.6.0</div>
+    </div>
+
+  </div>
+</section>
+
+<section class="section" id="roadmap">
+  <div class="wrap">
+    <div class="section-head"><span class="num">06</span><h2>Roadmap</h2><span class="meta">без дат</span></div>
+    <div class="intro" style="margin-bottom:8px">
+      <p>Не «Q1 2027», а просто список. Что-то сделано, что-то в работе, что-то отложено — и это честно.</p>
+    </div>
+    <div class="roadmap">
+
+      <div class="rm-item">
+        <div class="rm-status done">готово</div>
+        <div>
+          <h4>XLSX с фиксированной структурой</h4>
+          <p><code>01_summary</code>, <code>02_key_data</code>, <code>03_consensus</code> с цветом, секционные <code>04_*</code>, <code>99_raw</code>, <code>!failed</code>. Env-флаги для отключения raw и цвета.</p>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-status done">готово</div>
+        <div>
+          <h4>Параллельный extended-сбор</h4>
+          <p><code>_x_ip</code> — 6 источников через ThreadPool, таймаут 5с, общий cap 10с. Команда <code>ip -x</code> завершается за 5-6 секунд вместо 40. <code>team_cymru</code> заменён на RIPE Stat.</p>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-status done">готово</div>
+        <div>
+          <h4>extended._failed</h4>
+          <p>Короткий список упавших источников в JSON, подробно в консоли. Виден в xlsx листом <code>!failed</code> и в HTML отдельным блоком.</p>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-status done">готово</div>
+        <div>
+          <h4>Реальные превью отчётов на сайте</h4>
+          <p>Раздел «Чтение вывода» содержит консольный вывод, HTML-карточки с тулбаром, XLSX-вкладки, Markdown с frontmatter и статичный снимок topology.</p>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-status done">готово</div>
+        <div>
+          <h4>Lazy import для CLI</h4>
+          <p>Старт занимает ~900 мс — почти всё это импорт тяжёлых модулей (networkx, reportlab, phonenumbers), которые не нужны для 90% команд. Lazy import ускоряет <code>astrym.py --help</code> до ~200 мс.</p>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-status done">готово</div>
+        <div>
+          <h4>ProcessPool через диспетчер без лямбд</h4>
+          <p>Module-level диспетчер <code>_r2_run_task</code> — threat intel идёт через ProcessPool с настоящим жёстким таймаутом, а не через threads-fallback.</p>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-status done">готово</div>
+        <div>
+          <h4>Workspaces в SQLite-графе</h4>
+          <p><code>--ws client1</code> открывает отдельную БД <code>ws_client1.db</code>. «Работа» и «личные сканы» больше не мешаются в одном графе.</p>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-status done">готово</div>
+        <div>
+          <h4>Rate-limit в serve.py по IP</h4>
+          <p>Token bucket на 60 rps + отдельный на <code>/batch</code>. Возвращает 429 с <code>Retry-After</code>, учитывает <code>X-Forwarded-For</code>.</p>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-status done">готово</div>
+        <div>
+          <h4>PDF-реанимация</h4>
+          <p>Reportlab с авто-TTF, fallback на fpdf2. <code>pdf-status</code> показывает, что реально работает на текущей машине.</p>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-status done">готово</div>
+        <div>
+          <h4>Schedule API с alert_on из CLI</h4>
+          <p><code>schedule-add --cron "0 6 * * *" --alert-on new-subdomain,ip-change</code>. Плюс <code>schedule-run --due</code> для внешнего crontab.</p>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-status done">готово</div>
+        <div>
+          <h4>Hudson Rock rate-limit handling</h4>
+          <p>Retry при 429 с учётом <code>Retry-After</code>. Кэш успешных ответов на 24 часа. <code>hr-status</code> — счётчики за сессию.</p>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-status done">готово</div>
+        <div>
+          <h4>XLSX / Neo4j / Obsidian для новых команд</h4>
+          <p>XLSX-листы <code>hr_stealers</code>, <code>identity_*</code>, <code>wmn_found</code>. HTML-рендеры для 14 новых типов. Obsidian-заметки.</p>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-status done">готово</div>
+        <div>
+          <h4>WMN 500+ сайтов параллельно</h4>
+          <p>Thread-local sessions, 40 воркеров по умолчанию, прогресс, статус <code>unknown</code> для 403. <code>ASTRYM_WMN_WORKERS</code> для подкрутки.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="not-doing">
+  <div class="wrap">
+    <div class="section-head"><span class="num">07</span><h2>Что не попало</h2><span class="meta">сознательно</span></div>
+    <div class="intro" style="margin-bottom:8px">
+      <p>Честный список «почему нет» важнее списка «что есть». Всё это — вещи, которые кто-то просил, но мы решили не делать.</p>
+    </div>
+    <div class="nope">
+      <div class="nope-item">
+        <h4>Скрейпинг соцсетей</h4>
+        <p>Instagram, VK, Facebook — требуют auth, ломаются еженедельно, тянут за собой вопросы ответственности. Оставили только публичные ссылки на страницы через Google Dorks.</p>
+      </div>
+      <div class="nope-item">
+        <h4>Пробив по номеру через боты</h4>
+        <p>Платные Telegram-боты «дай номер — верну ФИО» — это не OSINT, а покупка чужих данных. Ни при каких условиях.</p>
+      </div>
+      <div class="nope-item">
+        <h4>Показ паролей из утечек</h4>
+        <p>Есть Hudson Rock — он показывает <em>факт</em> заражения и семейство stealer'а. Сами пароли в CLI не выводим: слишком легко превращается в инструмент шантажа.</p>
+      </div>
+      <div class="nope-item">
+        <h4>Деанон по фото / лицу</h4>
+        <p>Поиск по лицу через публичные сервисы — этически серая зона. Плюс точность 50/50, ложные срабатывания разрушают репутацию сильнее, чем помогают.</p>
+      </div>
+      <div class="nope-item">
+        <h4>Брутфорс логинов / админок</h4>
+        <p>Это уже не разведка, а атака. ASTRYM — про наблюдение, а не про вторжение.</p>
+      </div>
+      <div class="nope-item">
+        <h4>Обход капчи</h4>
+        <p>Ломает чужие сервисы, нарушает ToS, и создаёт нагрузку на публичные API, от которых мы же и зависим. Если сайт ставит капчу — уважаем.</p>
+      </div>
+      <div class="nope-item">
+        <h4>Автопокупка «баз» за крипту</h4>
+        <p>Нет. Ни в каком виде. Ни через API, ни через парсинг закрытых каналов.</p>
+      </div>
+      <div class="nope-item">
+        <h4>Мониторинг конкретного человека без его ведома</h4>
+        <p>Инструмент для инфраструктурной разведки (домены, IP, ASN, сертификаты). Мониторинг живого человека на постоянной основе — вне области проекта.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="localdb">
+  <div class="wrap">
+    <div class="section-head"><span class="num">07b</span><h2>Локальные базы</h2><span class="meta">офлайн-режим</span></div>
+    <div class="intro" style="margin-bottom:24px">
+      <p>ASTRYM работает <strong>без интернета</strong>: ASN, страна, город, вендор по MAC и гео берутся из локальных баз. Если API недоступны — команда <code>ip</code> переключается на локальные источники. Команды <code>ip-local</code> и <code>mac</code> работают офлайн всегда.</p>
+      <p>Все базы — <strong>открытые</strong>: RIR, IEEE OUI, MaxMind GeoLite2, DB-IP Lite, iptoasn, ip2region, oui-master, as-ip-blocks. Никаких сливов и коммерческих API.</p>
+    </div>
+
+    <h3 style="font-family:var(--mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin-bottom:12px">Гео и ASN</h3>
+    <table class="flags">
+      <thead><tr><th>Файл</th><th>Размер</th><th>Что даёт</th><th>Источник</th></tr></thead>
+      <tbody>
+        <tr><td>GeoLite2-City.mmdb</td><td>61 MB</td><td>город, координаты, timezone</td><td>MaxMind · CC BY-SA 4.0</td></tr>
+        <tr><td>GeoLite2-Country.mmdb</td><td>8 MB</td><td>страна, country_code</td><td>MaxMind</td></tr>
+        <tr><td>GeoLite2-ASN.mmdb</td><td>11.5 MB</td><td>ASN для IPv6</td><td>MaxMind</td></tr>
+        <tr><td>dbip-city-lite.mmdb</td><td>121 MB</td><td>fallback гео (город)</td><td>DB-IP · CC BY 4.0</td></tr>
+        <tr><td>ip2region_v4.xdb</td><td>11 MB</td><td>city / province / ISP (IPv4)</td><td>ip2region · Apache-2.0</td></tr>
+        <tr><td>ip2region_v6.xdb</td><td>37 MB</td><td>city / province / ISP (IPv6)</td><td>ip2region</td></tr>
+        <tr><td>asn.db</td><td>36 MB</td><td>404 425 ASN-записей для IPv4</td><td>iptoasn · PDDL</td></tr>
+        <tr><td>as-ip-blocks/</td><td>~750 KB</td><td>94 ASN × IPv4 + IPv6 префиксы</td><td>ipverse · public domain</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-family:var(--mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin:28px 0 12px">MAC / OUI</h3>
+    <table class="flags">
+      <thead><tr><th>Файл</th><th>Размер</th><th>Что даёт</th><th>Источник</th></tr></thead>
+      <tbody>
+        <tr><td>oui-master.db</td><td>18 MB</td><td>59k OUI + категории (Router / Laptop / Modem)</td><td>OUI-Master · MIT</td></tr>
+        <tr><td>oui.db</td><td>3.9 MB</td><td>54 115 MAC-префиксов (fallback)</td><td>IEEE public</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-family:var(--mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin:28px 0 12px">RIR delegation</h3>
+    <table class="flags">
+      <thead><tr><th>Файл</th><th>Размер</th><th>Что даёт</th><th>Источник</th></tr></thead>
+      <tbody>
+        <tr><td>delegated-ripencc-extended-latest</td><td>17.2 MB</td><td>IPv4 / IPv6 / ASN — Европа, Ближний Восток</td><td>RIPE NCC</td></tr>
+        <tr><td>delegated-arin-extended-latest</td><td>12.2 MB</td><td>то же — Северная Америка</td><td>ARIN</td></tr>
+        <tr><td>delegated-apnic-extended-latest</td><td>8.8 MB</td><td>то же — Азия-Тихий океан</td><td>APNIC</td></tr>
+        <tr><td>delegated-lacnic-extended-latest</td><td>4.4 MB</td><td>то же — Латинская Америка</td><td>LACNIC</td></tr>
+        <tr><td>delegated-afrinic-extended-latest</td><td>1.0 MB</td><td>то же — Африка</td><td>AFRINIC</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-family:var(--mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin:28px 0 12px">Обновление</h3>
+    <div class="code-block">
+<span class="c"># скачать / обновить все базы (~319 MB)</span>
+python astrym.py db-sync
+
+<span class="c"># посмотреть текущее состояние</span>
+python astrym.py db-status
+    </div>
+
+    <div class="annot" style="margin-top:20px">
+      <strong>Отключено</strong>
+      <code>ahmia</code> и <code>darkweb</code> — временно отключены: Ahmia перешла на JavaScript-рендеринг, а <code>darkweb</code> требует стабильного Tor-туннеля (блокируется DPI). В планах — вернуть через <code>pyahmia</code> / Snowflake.
+    </div>
+  </div>
+</section>
+
+<section class="section" id="deps">
+  <div class="wrap">
+    <div class="section-head"><span class="num">08</span><h2>Зависимости</h2><span class="meta">спасибо им</span></div>
+    <div class="intro" style="margin-bottom:8px">
+      <p>80% пользы ASTRYM — это интеграция с чужими сервисами и библиотеками. Без них был бы ещё один список curl-команд.</p>
+    </div>
+
+    <h3 style="font-family:var(--mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin-top:24px;margin-bottom:8px">Python-библиотеки</h3>
+    <div class="deps">
+      <div class="dep"><code>dnspython</code><span>вся DNS-часть: resolve, MX, TXT, DNSSEC, DoH fallback</span></div>
+      <div class="dep"><code>rich</code><span>цвета, таблицы, панели, прогресс-бары в терминале</span></div>
+      <div class="dep"><code>networkx</code><span>Louvain-сообщества, GEXF, shortest path, subgraph</span></div>
+      <div class="dep"><code>requests</code><span>все HTTP-запросы, включая socks-прокси для Tor</span></div>
+      <div class="dep"><code>phonenumbers</code><span>разбор номеров, оператор, тип линии, часовые пояса</span></div>
+      <div class="dep"><code>reportlab</code><span>PDF-экспорт (с fallback на fpdf2)</span></div>
+      <div class="dep"><code>fpdf2</code><span>PDF-fallback (если reportlab недоступен)</span></div>
+      <div class="dep"><code>openpyxl</code><span>XLSX-экспорт с несколькими листами</span></div>
+      <div class="dep"><code>pyexiftool</code><span>метаданные файлов + GPS → в граф</span></div>
+      <div class="dep"><code>pycountry</code><span>нормализация стран в консенсусе</span></div>
+    </div>
+
+    <h3 style="font-family:var(--mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin-top:32px;margin-bottom:8px">Публичные API без ключа</h3>
+    <div class="deps">
+      <div class="dep"><code>crt.sh</code><span>Certificate Transparency, основной источник субдоменов</span></div>
+      <div class="dep"><code>certspotter</code><span>второй CT-источник</span></div>
+      <div class="dep"><code>hackertarget</code><span>host search + reverse IP</span></div>
+      <div class="dep"><code>ct.grepular.com</code><span>4-й CT-источник</span></div>
+      <div class="dep"><code>rdap.org</code><span>WHOIS через RDAP (RFC 7483)</span></div>
+      <div class="dep"><code>dns.google</code> · <code>cloudflare-dns.com</code><span>DoH для верификации DNS и fallback резолвера</span></div>
+      <div class="dep"><code>otx.alienvault.com</code><span>passive DNS, threat intel pulses</span></div>
+      <div class="dep"><code>circl.lu/pdns</code><span>второй passive DNS</span></div>
+      <div class="dep"><code>internetdb.shodan.io</code><span>открытые порты и CVE без ключа</span></div>
+      <div class="dep"><code>urlhaus.abuse.ch</code> · <code>threatfox.abuse.ch</code><span>malware URL, IOC</span></div>
+      <div class="dep"><code>feodotracker.abuse.ch</code><span>blocklist банковских троянов</span></div>
+      <div class="dep"><code>stamparm/ipsum</code><span>агрегированный blocklist из ~30 источников</span></div>
+      <div class="dep"><code>spamhaus.org/drop</code><span>список hijacked сетей</span></div>
+      <div class="dep"><code>lists.blocklist.de</code><span>атаки на SSH/HTTP</span></div>
+      <div class="dep"><code>hudsonrock.com</code><span>infostealer intelligence, Cavalier OSINT API</span></div>
+      <div class="dep"><code>haveibeenpwned.com</code><span>утечки (account требует ключ, password — k-anonymity)</span></div>
+      <div class="dep"><code>leakcheck.io</code><span>public API без ключа</span></div>
+      <div class="dep"><code>xposedornot.com</code><span>утечки email, замена HIBP без ключа</span></div>
+      <div class="dep"><code>osv.dev</code><span>vulnerability пакетов (npm/PyPI/Go/…)</span></div>
+      <div class="dep"><code>grep.app</code><span>поиск кода по GitHub-репозиториям</span></div>
+      <div class="dep"><code>dnsviz.net</code><span>DNSSEC chain validation</span></div>
+      <div class="dep"><code>hstspreload.org</code><span>статус домена в HSTS preload</span></div>
+      <div class="dep"><code>stat.ripe.net</code><span>ASN info, peers, announced prefixes</span></div>
+      <div class="dep"><code>peeringdb.com</code><span>IX, facilities, policy для ASN</span></div>
+      <div class="dep"><code>jldc.me/anubis</code><span>ещё один источник субдоменов</span></div>
+      <div class="dep"><code>dns.bufferover.run</code><span>passive DNS из Rapid7 Sonar</span></div>
+      <div class="dep"><code>emailrep.io</code><span>репутация email</span></div>
+      <div class="dep"><code>disify.com</code><span>валидация email и disposable-домены</span></div>
+    </div>
+
+    <h3 style="font-family:var(--mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin-top:32px;margin-bottom:8px">Протоколы и стандарты</h3>
+    <div class="deps">
+      <div class="dep"><code>STIX 2.1</code><span>OASIS standard для threat intelligence</span></div>
+      <div class="dep"><code>RDAP</code><span>RFC 7483 / 9082 / 9083 — WHOIS replacement</span></div>
+      <div class="dep"><code>DNSSEC</code><span>RFC 4033-4035, chain of trust</span></div>
+      <div class="dep"><code>MTA-STS</code><span>RFC 8461, TLS для почты</span></div>
+      <div class="dep"><code>BIMI</code><span>Brand Indicators for Message Identification</span></div>
+      <div class="dep"><code>TLS-RPT</code><span>RFC 8460, отчёты о TLS для почты</span></div>
+      <div class="dep"><code>SPF / DKIM / DMARC</code><span>RFC 7208 / 6376 / 7489</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="install">
+  <div class="wrap">
+    <div class="section-head"><span class="num">09</span><h2>Установка</h2><span class="meta">Python 3.10+</span></div>
+    <div class="intro" style="margin-bottom:24px"><p>Скачай папку <code>astrym/</code>, поставь зависимости, запусти.</p></div>
+    <div class="code-block">
+<span class="c"># 1. зависимости</span>
+pip install requests dnspython rich networkx reportlab phonenumbers pycountry openpyxl pyexiftool
+
+<span class="c"># 2. конфиг (по желанию)</span>
+mkdir -p ~/.astrym
+nano ~/.astrym/config.json
+
+<span class="c"># 3. локальные базы (офлайн-режим, ~319 MB)</span>
+python astrym.py db-sync
+
+<span class="c"># 4. запуск</span>
+python astrym.py help
+python astrym.py domain github.com -x
+    </div>
+    <div class="intro" style="margin-top:24px">
+      <p><strong>Зависимости опциональны.</strong> Без ключей работает всё, кроме VT / Shodan / Censys / SecurityTrails / Hunter / MISP / OpenCTI / Jira / Linear. Без <code>dnspython</code> часть DNS отваливается, без <code>rich</code> — цвета, без <code>networkx</code> — community / gexf.</p>
+      <p><strong>Termux на Android.</strong> Зависимости через <code>pip</code>, exiftool — через <code>pkg install exiftool</code>. Рабочая папка по умолчанию <code>/storage/emulated/0/astrym/</code>, конфиг в <code>~/.astrym/</code>.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="row">
+      <div>
+        <div style="letter-spacing:3px;color:var(--fg-soft);margin-bottom:6px">ASTRYM</div>
+        <div>OSINT toolkit &middot; MIT &middot; локальный запуск</div>
+        <div style="margin-top:8px;color:var(--fg-faint);font-size:11px">один файл с июня 2026, вырос в 126 команд</div>
+      </div>
+      <div style="text-align:right">
+        <div><a href="#top">наверх</a></div>
+        <div style="margin-top:6px">2026</div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast">copied</div>
+<div class="kbd-hint" id="kbd-hint">
+  <kbd>g</kbd><kbd>c</kbd> команды &middot; <kbd>g</kbd><kbd>v</kbd> чтение &middot; <kbd>g</kbd><kbd>o</kbd> obsidian &middot; <kbd>g</kbd><kbd>a</kbd> архив &middot; <kbd>g</kbd><kbd>r</kbd> roadmap &middot; <kbd>g</kbd><kbd>i</kbd> установка &middot; <kbd>?</kbd> спрятать
+</div>
+
+<script>
+(function(){
+  var toast=document.getElementById("toast");
+  var t=null;
+  function show(m){toast.textContent=m;toast.classList.add("show");if(t)clearTimeout(t);t=setTimeout(function(){toast.classList.remove("show")},1400);}
+  document.querySelectorAll("[data-copy]").forEach(function(el){
+    el.addEventListener("click",function(){
+      var text=el.getAttribute("data-copy");
+      if(navigator.clipboard){navigator.clipboard.writeText(text).then(function(){show("copied")});}
+      else{var ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand("copy")}catch(e){}ta.remove();show("copied");}
+    });
+  });
+
+  document.querySelectorAll('a[href^="#"]').forEach(function(a){
+    a.addEventListener("click",function(e){
+      var id=a.getAttribute("href").slice(1);if(!id)return;
+      var el=document.getElementById(id);if(!el)return;
+      e.preventDefault();el.scrollIntoView({behavior:"smooth",block:"start"});
+    });
+  });
+
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var sections = document.querySelectorAll(".section, .hero");
+  if (reduce){
+    sections.forEach(function(s){s.classList.add("in-view")});
+  } else if ("IntersectionObserver" in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting){
+          e.target.classList.add("in-view");
+          io.unobserve(e.target);
+        }
+      });
+    }, {threshold:0.06, rootMargin:"0px 0px -40px 0px"});
+    sections.forEach(function(s){
+      if (s.classList.contains("hero")) { s.classList.add("in-view"); return; }
+      io.observe(s);
+    });
+  } else {
+    sections.forEach(function(s){s.classList.add("in-view")});
+  }
+
+  var gMode=false, gTimer=null;
+  var kbdHint=document.getElementById("kbd-hint");
+  var hintDismissed=false;
+  var map={
+    "c":"commands",
+    "v":"reading",
+    "o":"obsidian",
+    "a":"archive",
+    "r":"roadmap",
+    "i":"install",
+    "f":"flags",
+    "h":"changelog",
+    "d":"deps",
+    "n":"not-doing",
+    "t":"top"
+  };
+  function goto(id){
+    var el=document.getElementById(id);
+    if(el){el.scrollIntoView({behavior:"smooth",block:"start"});}
+  }
+  document.addEventListener("keydown",function(e){
+    var tag=(e.target.tagName||"").toLowerCase();
+    if(tag==="input"||tag==="textarea") return;
+    if(e.key==="?"){
+      hintDismissed=!hintDismissed;
+      kbdHint.classList.toggle("show",!hintDismissed);
+      return;
+    }
+    if(e.key==="g"){
+      gMode=true;
+      clearTimeout(gTimer);
+      gTimer=setTimeout(function(){gMode=false},1200);
+      kbdHint.classList.add("show");
+      return;
+    }
+    if(gMode){
+      var k=e.key.toLowerCase();
+      if(map[k]){
+        e.preventDefault();
+        goto(map[k]);
+        gMode=false;
+        clearTimeout(gTimer);
+      }
+    }
+  });
+  setTimeout(function(){
+    kbdHint.classList.add("show");
+    setTimeout(function(){
+      if(!hintDismissed) kbdHint.classList.remove("show");
+    },4000);
+  },800);
+})();
+</script>
+
+</body>
+</html>
