@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ASTRYM — OSINT toolkit</title>
-<meta name="description" content="ASTRYM — модульный OSINT-инструмент. 126 команд, 9 групп, 10 форматов экспорта. Граф связей, STIX/MISP/OpenCTI/XLSX/Obsidian. MIT.">
+<meta name="description" content="ASTRYM — модульный OSINT-инструмент. 124 команды, 9 групп, 11 форматов экспорта. Граф связей, STIX/MISP/OpenCTI/XLSX/Obsidian. MIT.">
 <style>
 :root{
   --bg:#0a0a0b; --bg-soft:#101013; --bg-raise:#16161a;
@@ -244,7 +244,7 @@ code,pre,kbd{font-family:var(--mono);font-size:.92em}
 .commit .body{color:var(--fg-soft);padding-left:16px;margin-top:6px}
 .commit .body div{margin-bottom:2px}
 
-.code-block{background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;font-family:var(--mono);font-size:12.5px;line-height:1.7;color:var(--fg-soft);overflow-x:auto}
+.code-block{background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;font-family:var(--mono);font-size:12.5px;line-height:1.7;color:var(--fg-soft);overflow-x:auto;white-space:pre}
 .code-block .c{color:var(--fg-mute);font-style:italic}
 
 footer{padding:60px 0 40px;border-top:1px solid var(--border);font-family:var(--mono);font-size:12px;color:var(--fg-mute)}
@@ -488,16 +488,17 @@ footer a:hover{color:var(--fg)}
     </a>
     <div class="nav-links">
       <a href="#about">о проекте</a>
+      <a href="#install">установка</a>
       <a href="#commands">команды</a>
       <a href="#reading">чтение</a>
       <a href="#obsidian">Obsidian</a>
       <a href="#flags">флаги</a>
       <a href="#localdb">базы</a>
+      <a href="#webui">webui</a>
       <a href="#changelog">история</a>
       <a href="#archive">архив</a>
       <a href="#roadmap">roadmap</a>
-      <a href="#install">установка</a>
-    </div>
+      </div>
   </div>
 </nav>
 
@@ -559,9 +560,33 @@ footer a:hover{color:var(--fg)}
     </div>
   </div>
 </section>
+<section class="section" id="install">
+  <div class="wrap">
+    <div class="section-head"><span class="num">02</span><h2>Установка</h2><span class="meta">Python 3.10+</span></div>
+    <div class="intro" style="margin-bottom:24px"><p>Скачай папку <code>astrym/</code>, поставь зависимости, запусти.</p></div>
+    <div class="code-block"><span class="c"># 1. зависимости</span>
+pip install -r requirements.txt
+
+<span class="c"># 2. конфиг (по желанию)</span>
+mkdir -p ~/.astrym
+nano ~/.astrym/config.json
+
+<span class="c"># 3. локальные базы (офлайн-режим, ~385 MB)</span>
+python astrym.py db-sync
+
+<span class="c"># 4. запуск</span>
+python astrym.py help
+python astrym.py domain github.com -x</div>
+    <div class="intro" style="margin-top:24px">
+      <p><strong>Зависимости опциональны.</strong> Без ключей работает всё, кроме VT / Shodan / Censys / SecurityTrails / Hunter / MISP / OpenCTI / Jira / Linear. Без <code>dnspython</code> часть DNS отваливается, без <code>rich</code> — цвета, без <code>networkx</code> — community / gexf.</p>
+      <p><strong>Termux на Android.</strong> Зависимости через <code>pip</code>, exiftool — через <code>pkg install exiftool</code>. Рабочая папка по умолчанию <code>/storage/emulated/0/astrym/</code>, конфиг в <code>~/.astrym/</code>.</p>
+    </div>
+  </div>
+</section>
+
 <section class="section" id="commands">
   <div class="wrap">
-    <div class="section-head"><span class="num">02</span><h2>Команды</h2><span class="meta">126 команд &middot; 9 групп &middot; 10 форматов &middot; ~2000 комбинаций</span></div>
+    <div class="section-head"><span class="num">03</span><h2>Команды</h2><span class="meta">124 команды &middot; 9 групп &middot; 11 форматов &middot; ~2000 комбинаций</span></div>
 
     <div class="cmd-group">
       <div class="cmd-group-head">Core — базовые данные</div>
@@ -649,7 +674,7 @@ footer a:hover{color:var(--fg)}
       <div class="cmd"><div class="cmd-name">mac <span class="args">&lt;addr&gt;</span></div><div class="cmd-body"><div class="desc">Вендор по MAC через IEEE OUI (MA-L / MA-M / MA-S). Работает офлайн.</div><div class="ex">astrym.py mac 3C:5A:B4:11:22:33</div></div></div>
       <div class="cmd"><div class="cmd-name">ip-local <span class="args">&lt;ip&gt;</span></div><div class="cmd-body"><div class="desc">ASN и организация по IPv4/IPv6 из локальных баз. Офлайн-режим без API.</div><div class="ex">astrym.py ip-local 8.8.8.8</div></div></div>
       <div class="cmd"><div class="cmd-name">db-status <span class="args"></span></div><div class="cmd-body"><div class="desc">Список локальных баз: файлы, размеры, даты последнего обновления.</div><div class="ex">astrym.py db-status</div></div></div>
-      <div class="cmd"><div class="cmd-name">db-sync <span class="args"></span></div><div class="cmd-body"><div class="desc">Скачать/обновить все локальные базы (14 источников, ~319 MB).</div><div class="ex">astrym.py db-sync</div></div></div>
+      <div class="cmd"><div class="cmd-name">db-sync <span class="args"></span></div><div class="cmd-body"><div class="desc">Скачать/обновить все локальные базы (17 источников, ~385 MB).</div><div class="ex">astrym.py db-sync</div></div></div>
     </div>
 
     <div class="cmd-group">
@@ -1104,7 +1129,7 @@ python astrym.py domain github.com -f json,html,obsidian</pre>
 
 <section class="section" id="flags">
   <div class="wrap">
-    <div class="section-head"><span class="num">03</span><h2>Флаги</h2><span class="meta">глобальные, работают с любой командой</span></div>
+    <div class="section-head"><span class="num">06</span><h2>Флаги</h2><span class="meta">глобальные, работают с любой командой</span></div>
     <table class="flags">
       <thead><tr><th>Флаг</th><th>Что делает</th></tr></thead>
       <tbody>
@@ -1138,7 +1163,7 @@ python astrym.py domain github.com -f json,html,obsidian</pre>
 
 <section class="section" id="changelog">
   <div class="wrap">
-    <div class="section-head"><span class="num">04</span><h2>История</h2><span class="meta">последние изменения</span></div>
+    <div class="section-head"><span class="num">07</span><h2>История</h2><span class="meta">последние изменения</span></div>
     <div class="intro" style="margin-bottom:24px">
       <p><strong>Сводка по версиям:</strong> 0.7.6 beta &rarr; 0.7.6.1 beta &rarr; 0.7.7 beta &rarr; 0.8.0 beta (R6&ndash;R13) &rarr; 0.9.x beta (R14&ndash;R30) &rarr; 1.0.0 release (R31&ndash;R40, 122 команды) &rarr; <strong>1.0.1 minimum update</strong> (R41: +4 команды, локальные базы) &rarr; <strong>2.0.0 latest</strong> (R42: офлайн-режим, фиксы).</p>
     </div>
@@ -1554,10 +1579,10 @@ python astrym.py domain github.com -f json,html,obsidian</pre>
 </section>
 <section class="section" id="archive">
   <div class="wrap">
-    <div class="section-head"><span class="num">05</span><h2>Архив</h2><span class="meta">первые версии &middot; июнь 2026</span></div>
+    <div class="section-head"><span class="num">08</span><h2>Архив</h2><span class="meta">первые версии &middot; июнь 2026</span></div>
 
     <div class="intro" style="margin-bottom:32px">
-      <p>До того как ASTRYM стал модульным графом на 126 команд, он был одним файлом. Ниже — три самые первые версии, с реальным выводом в терминале и с тем, <strong>что каждая из них дала</strong>.</p>
+      <p>До того как ASTRYM стал модульным графом на 124 команды, он был одним файлом. Ниже — три самые первые версии, с реальным выводом в терминале и с тем, <strong>что каждая из них дала</strong>.</p>
     </div>
 
     <h3 style="font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin-bottom:8px">Эволюция по цифрам</h3>
@@ -1857,7 +1882,7 @@ python astrym.py domain github.com -f json,html,obsidian</pre>
 
 <section class="section" id="roadmap">
   <div class="wrap">
-    <div class="section-head"><span class="num">06</span><h2>Roadmap</h2><span class="meta">без дат</span></div>
+    <div class="section-head"><span class="num">09</span><h2>Roadmap</h2><span class="meta">без дат</span></div>
     <div class="intro" style="margin-bottom:8px">
       <p>Не «Q1 2027», а просто список. Что-то сделано, что-то в работе, что-то отложено — и это честно.</p>
     </div>
@@ -1960,7 +1985,7 @@ python astrym.py domain github.com -f json,html,obsidian</pre>
 
 <section class="section" id="not-doing">
   <div class="wrap">
-    <div class="section-head"><span class="num">07</span><h2>Что не попало</h2><span class="meta">сознательно</span></div>
+    <div class="section-head"><span class="num">10</span><h2>Что не попало</h2><span class="meta">сознательно</span></div>
     <div class="intro" style="margin-bottom:8px">
       <p>Честный список «почему нет» важнее списка «что есть». Всё это — вещи, которые кто-то просил, но мы решили не делать.</p>
     </div>
@@ -2047,7 +2072,7 @@ python astrym.py domain github.com -f json,html,obsidian</pre>
 
     <h3 style="font-family:var(--mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin:28px 0 12px">Обновление</h3>
     <div class="code-block">
-<span class="c"># скачать / обновить все базы (~319 MB)</span>
+<span class="c"># скачать / обновить все базы (~385 MB)</span>
 python astrym.py db-sync
 
 <span class="c"># посмотреть текущее состояние</span>
@@ -2061,9 +2086,44 @@ python astrym.py db-status
   </div>
 </section>
 
+<!-- ============ WEB UI + REST API ============ -->
+<section class="section" id="webui">
+  <div class="wrap">
+    <div class="section-head"><span class="num">12</span><h2>Web UI &middot; REST API</h2><span class="meta">локальный сервер · 0 зависимостей</span></div>
+    <div class="intro" style="margin-bottom:24px"><p>Поднимается как локальный сервер: SPA-панель <code>/ui</code> + REST API на голом <code>http.server</code>. Работает на <code>127.0.0.1</code>, при желании — на всю локальную сеть.</p></div>
+
+    <div class="code-block">
+<span class="c"># 1. ключ (один раз)</span>
+python3 astrym_serve.py --genkey
+
+<span class="c"># 2. запуск</span>
+python3 astrym_serve.py --host 0.0.0.0 --port 8080
+
+<span class="c"># 3. или одной командой (Termux)</span>
+bash ~/astrym-go.sh
+    </div>
+
+    <div class="section-head" style="margin-top:32px"><span class="num">&mdash;</span><h3>Эндпоинты</h3><span class="meta">без зависимостей</span></div>
+    <table class="flags">
+      <thead><tr><th>Метод</th><th>Путь</th><th>Описание</th></tr></thead>
+      <tbody>
+        <tr><td>GET</td><td><code>/ui</code></td><td>SPA-панель (Scan &middot; Graph &middot; STIX &middot; Monitor)</td></tr>
+        <tr><td>GET</td><td><code>/health</code></td><td>Статус сервера (без ключа)</td></tr>
+        <tr><td>GET</td><td><code>/info</code></td><td>Версия, состояние графа и кэша</td></tr>
+        <tr><td>GET</td><td><code>/kinds</code></td><td>Список команд</td></tr>
+        <tr><td>GET</td><td><code>/scan/&lt;kind&gt;/&lt;target&gt;</code></td><td>Скан цели (<code>?format=json|md|html|stix</code>)</td></tr>
+        <tr><td>POST</td><td><code>/batch</code></td><td>Несколько целей одним запросом</td></tr>
+      </tbody>
+    </table>
+
+    <div class="intro" style="margin-top:24px"><p><strong>Android-нюанс.</strong> Termux и браузер — разные network namespace. <code>127.0.0.1</code> из браузера не работает. Слушай <code>0.0.0.0</code> и открывай по локальному IP: <code>http://192.168.x.x:8080/ui</code>. Локальный IP — <code>ifconfig | grep "inet "</code>.</p></div>
+  </div>
+</section>
+
+
 <section class="section" id="deps">
   <div class="wrap">
-    <div class="section-head"><span class="num">08</span><h2>Зависимости</h2><span class="meta">спасибо им</span></div>
+    <div class="section-head"><span class="num">13</span><h2>Зависимости</h2><span class="meta">спасибо им</span></div>
     <div class="intro" style="margin-bottom:8px">
       <p>80% пользы ASTRYM — это интеграция с чужими сервисами и библиотеками. Без них был бы ещё один список curl-команд.</p>
     </div>
@@ -2127,32 +2187,6 @@ python astrym.py db-status
   </div>
 </section>
 
-<section class="section" id="install">
-  <div class="wrap">
-    <div class="section-head"><span class="num">09</span><h2>Установка</h2><span class="meta">Python 3.10+</span></div>
-    <div class="intro" style="margin-bottom:24px"><p>Скачай папку <code>astrym/</code>, поставь зависимости, запусти.</p></div>
-    <div class="code-block">
-<span class="c"># 1. зависимости</span>
-pip install requests dnspython rich networkx reportlab phonenumbers pycountry openpyxl pyexiftool
-
-<span class="c"># 2. конфиг (по желанию)</span>
-mkdir -p ~/.astrym
-nano ~/.astrym/config.json
-
-<span class="c"># 3. локальные базы (офлайн-режим, ~319 MB)</span>
-python astrym.py db-sync
-
-<span class="c"># 4. запуск</span>
-python astrym.py help
-python astrym.py domain github.com -x
-    </div>
-    <div class="intro" style="margin-top:24px">
-      <p><strong>Зависимости опциональны.</strong> Без ключей работает всё, кроме VT / Shodan / Censys / SecurityTrails / Hunter / MISP / OpenCTI / Jira / Linear. Без <code>dnspython</code> часть DNS отваливается, без <code>rich</code> — цвета, без <code>networkx</code> — community / gexf.</p>
-      <p><strong>Termux на Android.</strong> Зависимости через <code>pip</code>, exiftool — через <code>pkg install exiftool</code>. Рабочая папка по умолчанию <code>/storage/emulated/0/astrym/</code>, конфиг в <code>~/.astrym/</code>.</p>
-    </div>
-  </div>
-</section>
-
 </main>
 
 <footer>
@@ -2161,7 +2195,7 @@ python astrym.py domain github.com -x
       <div>
         <div style="letter-spacing:3px;color:var(--fg-soft);margin-bottom:6px">ASTRYM</div>
         <div>OSINT toolkit &middot; MIT &middot; локальный запуск</div>
-        <div style="margin-top:8px;color:var(--fg-faint);font-size:11px">один файл с июня 2026, вырос в 126 команд</div>
+        <div style="margin-top:8px;color:var(--fg-faint);font-size:11px">один файл с июня 2026, вырос в 124 команды</div>
       </div>
       <div style="text-align:right">
         <div><a href="#top">наверх</a></div>
