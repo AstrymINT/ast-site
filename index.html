@@ -440,6 +440,29 @@ footer a:hover{color:var(--fg)}
 .xlsx-preview table.xlsx tr.row-warn:hover td,
 .xlsx-preview table.xlsx tr.row-err:hover td{filter:brightness(0.97)}
 /* === end R14 === */
+
+/* R69: hero buttons + R70 glass */
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:.5px;text-decoration:none;border-radius:var(--r);transition:all .25s var(--ease);position:relative;overflow:hidden;color:var(--fg);
+  border:1px solid rgba(255,255,255,.14);
+  background:linear-gradient(135deg,rgba(0,0,0,.55) 0%,rgba(26,10,46,.45) 30%,rgba(76,29,149,.32) 55%,rgba(157,23,77,.28) 78%,rgba(0,0,0,.55) 100%);
+  backdrop-filter:blur(18px) saturate(140%);
+  -webkit-backdrop-filter:blur(18px) saturate(140%);
+  box-shadow:0 6px 24px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.10)}
+.btn>*{position:relative;z-index:1}
+.btn:hover{border-color:rgba(255,255,255,.26);transform:translateY(-1px);
+  background:linear-gradient(135deg,rgba(0,0,0,.50) 0%,rgba(26,10,46,.40) 30%,rgba(76,29,149,.42) 55%,rgba(157,23,77,.38) 78%,rgba(0,0,0,.50) 100%);
+  box-shadow:0 10px 32px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.16)}
+.btn-github:hover{border-color:rgba(168,85,247,.45)}
+.btn-download{color:#fff;border-color:rgba(255,255,255,.20);
+  background:linear-gradient(135deg,rgba(0,0,0,.50) 0%,rgba(26,10,46,.40) 25%,rgba(76,29,149,.48) 55%,rgba(157,23,77,.42) 80%,rgba(0,0,0,.50) 100%);
+  box-shadow:0 6px 26px rgba(88,28,135,.35),inset 0 1px 0 rgba(255,255,255,.18)}
+.btn-download:hover{background:linear-gradient(135deg,rgba(0,0,0,.45) 0%,rgba(26,10,46,.35) 25%,rgba(76,29,149,.60) 55%,rgba(157,23,77,.52) 80%,rgba(0,0,0,.45) 100%);
+  box-shadow:0 10px 34px rgba(88,28,135,.50),inset 0 1px 0 rgba(255,255,255,.24);transform:translateY(-1px)}
+.btn-tg:hover{border-color:rgba(120,180,255,.40)}
+.btn svg{width:16px;height:16px}
+/* end R69 */
+
 </style>
 </head>
 <body>
@@ -486,6 +509,24 @@ footer a:hover{color:var(--fg)}
     <h1><span class="grad">OSINT,</span><br>который строится<br>вокруг графа.</h1>
     <p class="lead">ASTRYM — модульный инструмент для разведки по открытым источникам. Работает локально, не отправляет данные наружу, покрывает 80% задач без API-ключей. Всё, что находит — складывает в единый граф связей SQLite и умеет выгружать в STIX 2.1, XLSX и Obsidian. Работает офлайн: ASN, geo и MAC-вендор берутся из локальных баз, если API недоступны.</p>
     <div class="hero-cta">
+      <div class="hero-btns">
+        <a class="btn btn-github" href="https://github.com/mosadov/Astrym" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub
+        </a>
+        <a class="btn btn-download" href="https://github.com/mosadov/Astrym/releases/latest" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M.5 9.9a.5.5 0 01.5.5v2.5a1 1 0 001 1h12a1 1 0 001-1v-2.5a.5.5 0 011 0v2.5a2 2 0 01-2 2H2a2 2 0 01-2-2v-2.5a.5.5 0 01.5-.5z"/><path d="M7.646 11.854a.5.5 0 00.708 0l3-3a.5.5 0 00-.708-.708L8.5 10.293V1.5a.5.5 0 00-1 0v8.793L5.354 8.146a.5.5 0 10-.708.708l3 3z"/></svg>
+          Download
+        </a>
+        <a class="btn btn-tg" href="https://t.me/+ALzLys6hGyVlOTRl" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M15.05 2.04L1.79 7.16c-.9.36-.9 1.32-.16 1.55l3.4 1.06 1.28 3.93c.16.44.08.61.54.61.36 0 .52-.16.72-.36l1.72-1.68 3.55 2.63c.65.36 1.12.17 1.28-.61l2.32-10.93c.24-1.12-.42-1.63-1.14-1.32zM6.16 9.2L12.94 5l-5.44 4.92-.22 2.35-1.12-3.07z"/></svg>
+          ASTRYM Dev
+        </a>
+        <a class="btn btn-tg" href="https://t.me/+ttMfWWE2u8pjZTBi" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M15.05 2.04L1.79 7.16c-.9.36-.9 1.32-.16 1.55l3.4 1.06 1.28 3.93c.16.44.08.61.54.61.36 0 .52-.16.72-.36l1.72-1.68 3.55 2.63c.65.36 1.12.17 1.28-.61l2.32-10.93c.24-1.12-.42-1.63-1.14-1.32zM6.16 9.2L12.94 5l-5.44 4.92-.22 2.35-1.12-3.07z"/></svg>
+          My Telegram
+        </a>
+      </div>
       <div class="install">
         <span class="prefix">$</span>
         <code>python astrym.py ip 8.8.8.8</code>
