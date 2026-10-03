@@ -36,6 +36,17 @@ code,pre,kbd{font-family:var(--mono);font-size:.92em}
 .nav-links{display:flex;gap:18px;margin-left:auto;font-size:12.5px;font-family:var(--mono);flex-wrap:wrap}
 .nav-links a{color:var(--fg-soft);letter-spacing:.3px}
 .nav-links a:hover{color:var(--fg)}
+.nav-dropdown{position:relative;display:inline-block}
+.nav-dropdown > a{cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.nav-dropdown > a::after{content:"▾";font-size:9px;opacity:.55;transition:transform .2s ease}
+.nav-dropdown:hover > a::after,
+.nav-dropdown:focus-within > a::after{transform:rotate(180deg);opacity:1}
+.nav-dropdown-menu{position:absolute;top:100%;left:50%;transform:translateX(-50%) translateY(-4px);background:var(--bg-raise);border:1px solid var(--border-hi);border-radius:var(--r);padding:6px 0;min-width:170px;opacity:0;visibility:hidden;transition:opacity .18s ease,transform .18s ease,visibility .18s;z-index:200;margin-top:6px;box-shadow:0 12px 40px rgba(0,0,0,.55),0 0 0 1px rgba(168,85,247,.1)}
+.nav-dropdown-menu::before{content:"";position:absolute;top:-5px;left:50%;transform:translateX(-50%) rotate(45deg);width:8px;height:8px;background:var(--bg-raise);border-left:1px solid var(--border-hi);border-top:1px solid var(--border-hi)}
+.nav-dropdown:hover .nav-dropdown-menu,
+.nav-dropdown:focus-within .nav-dropdown-menu{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+.nav-dropdown-menu a{display:block;padding:7px 16px;font-size:12.5px;color:var(--fg-soft);letter-spacing:.3px;transition:background .12s ease,color .12s ease}
+.nav-dropdown-menu a:hover{background:var(--bg-soft);color:var(--acc-1)}
 
 .section,.hero{opacity:0;filter:blur(14px);transform:translateY(28px);transition:opacity .9s var(--ease),filter .9s var(--ease),transform .9s var(--ease);will-change:opacity,filter,transform}
 .section.in-view,.hero.in-view{opacity:1;filter:blur(0);transform:translateY(0)}
@@ -489,15 +500,31 @@ footer a:hover{color:var(--fg)}
     <div class="nav-links">
       <a href="#about">о проекте</a>
       <a href="#install">установка</a>
-      <a href="#commands">команды</a>
-      <a href="#reading">чтение</a>
-      <a href="#obsidian">Obsidian</a>
-      <a href="#flags">флаги</a>
-      <a href="#localdb">базы</a>
-      <a href="#webui">webui</a>
-      <a href="#changelog">история</a>
-      <a href="#archive">архив</a>
-      <a href="#roadmap">roadmap</a>
+      <div class="nav-dropdown">
+        <a href="#commands">документация</a>
+        <div class="nav-dropdown-menu">
+          <a href="#commands">команды</a>
+          <a href="#reading">чтение</a>
+          <a href="#obsidian">Obsidian</a>
+          <a href="#flags">флаги</a>
+        </div>
+      </div>
+      <div class="nav-dropdown">
+        <a href="#localdb">данные</a>
+        <div class="nav-dropdown-menu">
+          <a href="#localdb">базы</a>
+          <a href="#webui">webui</a>
+          <a href="#deps">deps</a>
+        </div>
+      </div>
+      <div class="nav-dropdown">
+        <a href="#changelog">развитие</a>
+        <div class="nav-dropdown-menu">
+          <a href="#changelog">история</a>
+          <a href="#archive">архив</a>
+          <a href="#roadmap">roadmap</a>
+        </div>
+      </div>
       </div>
   </div>
 </nav>
@@ -679,6 +706,7 @@ python astrym.py domain github.com -x</div>
 
     <div class="cmd-group">
       <div class="cmd-group-head">Utility</div>
+      <div class="cmd"><div class="cmd-name">password <span class="args">&lt;pass&gt;</span></div><div class="cmd-body"><div class="desc">Проверка пароля через HIBP Pwned Passwords (k-anonymity). Пароль не покидает машину — отправляются только первые 5 символов SHA-1.</div><div class="ex">astrym.py password qwerty</div></div></div>
       <div class="cmd"><div class="cmd-name">hr-status <span class="args"></span></div><div class="cmd-body"><div class="desc">Hudson Rock клиент: 429-счётчики, retries, cache hits, средний backoff за сессию.</div><div class="ex">astrym.py hr-status</div></div></div>
       <div class="cmd"><div class="cmd-name">r2-status <span class="args"></span></div><div class="cmd-body"><div class="desc">ProcessPool для threat intel: сколько задач выполнено, сколько fallback в threads.</div><div class="ex">astrym.py r2-status</div></div></div>
       <div class="cmd"><div class="cmd-name">pdf-status <span class="args"></span></div><div class="cmd-body"><div class="desc">Что реально работает: reportlab, fpdf2, найден ли Unicode-TTF.</div><div class="ex">astrym.py pdf-status</div></div></div>
@@ -690,7 +718,6 @@ python astrym.py domain github.com -x</div>
       <div class="cmd"><div class="cmd-name">check-updates <span class="args"></span></div><div class="cmd-body"><div class="desc">Проверка новых версий через GitHub API.</div><div class="ex">astrym.py check-updates</div></div></div>
       <div class="cmd"><div class="cmd-name">phone <span class="args">&lt;num&gt;</span></div><div class="cmd-body"><div class="desc">Разбор, страна, оператор, часовые пояса, мессенджеры.</div><div class="ex">astrym.py phone +79001234567</div></div></div>
       <div class="cmd"><div class="cmd-name">exif <span class="args">&lt;file&gt;</span></div><div class="cmd-body"><div class="desc">Метаданные файла через exiftool, GPS → в граф.</div><div class="ex">astrym.py exif photo.jpg</div></div></div>
-      <div class="cmd"><div class="cmd-name">darkweb <span class="args">&lt;.onion&gt;</span></div><div class="cmd-body"><div class="desc">Обход .onion через Tor.</div><div class="ex">astrym.py darkweb http://xxx.onion --pages 5</div></div></div>
     </div>
 
   </div>
