@@ -474,9 +474,81 @@ footer a:hover{color:var(--fg)}
 .btn svg{width:16px;height:16px}
 /* end R69 */
 
+/* R2.0: SOON overlay */
+#soon-overlay{
+  position:fixed;inset:0;z-index:9999;
+  display:none;
+  align-items:center;justify-content:center;
+  flex-direction:column;gap:24px;
+  background:rgba(10,10,11,.72);
+  backdrop-filter:blur(22px) saturate(120%);
+  -webkit-backdrop-filter:blur(22px) saturate(120%);
+}
+#soon-overlay.show{display:flex}
+#soon-overlay .soon-title{
+  font-family:var(--mono);
+  font-size:clamp(48px,12vw,140px);
+  font-weight:700;
+  letter-spacing:12px;
+  color:var(--fg);
+  opacity:.35;
+  text-transform:uppercase;
+  text-shadow:0 0 40px rgba(168,85,247,.35);
+  animation:soon-pulse 3.2s ease-in-out infinite;
+  user-select:none;
+}
+@keyframes soon-pulse{
+  0%,100%{opacity:.28;letter-spacing:12px}
+  50%{opacity:.5;letter-spacing:14px}
+}
+#soon-overlay .soon-sub{
+  font-family:var(--mono);
+  font-size:13px;
+  color:var(--fg-mute);
+  letter-spacing:2px;
+  text-transform:uppercase;
+}
+#soon-overlay .soon-cta{
+  font-family:var(--mono);
+  font-size:12.5px;
+  color:var(--acc-1);
+  padding:10px 18px;
+  border:1px solid rgba(168,85,247,.35);
+  border-radius:var(--r);
+  transition:all .25s var(--ease);
+  text-decoration:none;
+  letter-spacing:.5px;
+}
+#soon-overlay .soon-cta:hover{
+  background:rgba(168,85,247,.12);
+  border-color:var(--acc-1);
+  color:var(--fg);
+}
+#soon-overlay .soon-timer{
+  display:flex;gap:16px;
+  font-family:var(--mono);
+  font-size:clamp(20px,3vw,28px);
+  color:var(--fg);
+  letter-spacing:2px;
+}
+#soon-overlay .soon-timer span{opacity:.7}
 </style>
+
+
 </head>
 <body>
+<div id="soon-overlay">
+  <div class="soon-timer" id="soon-timer">
+    <span id="soon-d">00</span><span>:</span>
+    <span id="soon-h">00</span><span>:</span>
+    <span id="soon-m">00</span><span>:</span>
+    <span id="soon-s">00</span>
+  </div>
+  <div class="soon-title">Soon...</div>
+  <div class="soon-sub">Релиз 2.0 &middot; 05.10.2026 &middot; 13:30 CEST</div>
+  <a class="soon-cta" href="/release-time.html">Смотреть таймер &rarr;</a>
+</div>
+
 
 <nav class="nav">
   <div class="nav-inner">
@@ -2330,6 +2402,34 @@ bash ~/astrym-go.sh
       if(!hintDismissed) kbdHint.classList.remove("show");
     },4000);
   },800);
+})();
+</script>
+
+<script>
+(function(){
+  var TARGET = Date.UTC(2026, 9, 5, 11, 30, 0); // 05.10.2026 13:30 CEST
+  var overlay = document.getElementById("soon-overlay");
+  if (!overlay) return;
+  function pad(n){return n<10?"0"+n:""+n;}
+  function tick(){
+    var diff = TARGET - Date.now();
+    if (diff <= 0){
+      overlay.classList.remove("show");
+      return;
+    }
+    overlay.classList.add("show");
+    var sec = Math.floor(diff/1000);
+    var dEl = document.getElementById("soon-d");
+    var hEl = document.getElementById("soon-h");
+    var mEl = document.getElementById("soon-m");
+    var sEl = document.getElementById("soon-s");
+    if (dEl) dEl.textContent = pad(Math.floor(sec/86400));
+    if (hEl) hEl.textContent = pad(Math.floor((sec%86400)/3600));
+    if (mEl) mEl.textContent = pad(Math.floor((sec%3600)/60));
+    if (sEl) sEl.textContent = pad(sec%60);
+  }
+  tick();
+  setInterval(tick, 1000);
 })();
 </script>
 

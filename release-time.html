@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ASTRYM 2.0 — релиз 05.10.2026</title>
+<style>
+:root{
+  --bg:#0a0a0b; --bg-soft:#101013; --bg-raise:#16161a;
+  --border:#23232a; --border-hi:#2e2e38;
+  --fg:#e8e8ee; --fg-soft:#a0a0ac; --fg-mute:#6c6c78; --fg-faint:#44444c;
+  --acc-1:#a855f7; --acc-2:#60a5fa; --acc-soft:rgba(168,85,247,0.12);
+  --ok:#4ade80; --warn:#fbbf24; --err:#f87171;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --r-sm:6px; --r:10px;
+  --ease:cubic-bezier(0.22,1,0.36,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{background:var(--bg);color:var(--fg-soft);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:"";position:fixed;top:-300px;left:50%;transform:translateX(-50%);width:900px;height:600px;background:radial-gradient(ellipse at center,rgba(168,85,247,0.18) 0%,rgba(96,165,250,0.08) 40%,transparent 70%);filter:blur(60px);pointer-events:none;z-index:0}
+a{color:var(--acc-1);text-decoration:none;transition:color .15s var(--ease)}
+a:hover{color:var(--acc-2)}
+code,kbd{font-family:var(--mono);font-size:.92em}
+.wrap{position:relative;max-width:1080px;margin:0 auto;padding:0 24px;z-index:1}
+.section{padding:72px 0;position:relative}
+.section-head{display:flex;align-items:baseline;gap:16px;margin-bottom:40px;flex-wrap:wrap}
+.section-head .num{font-family:var(--mono);font-size:12px;color:var(--fg-faint);letter-spacing:2px}
+.section-head h2{font-family:var(--mono);font-size:26px;font-weight:600;letter-spacing:-.5px;color:var(--fg)}
+.section-head .meta{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--fg-mute)}
+.intro p{color:var(--fg-soft);max-width:760px;margin-bottom:16px}
+.intro p strong{color:var(--fg);font-weight:500}
+.intro code{background:var(--bg-soft);border:1px solid var(--border);padding:1px 6px;border-radius:4px;color:var(--acc-2);font-size:.85em}
+.timer{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:32px 0 28px}
+.tcell{background:linear-gradient(135deg,rgba(0,0,0,.55) 0%,rgba(26,10,46,.45) 30%,rgba(76,29,149,.32) 55%,rgba(157,23,77,.28) 78%,rgba(0,0,0,.55) 100%);border:1px solid rgba(255,255,255,.14);border-radius:var(--r);padding:26px 16px 20px;text-align:center;position:relative;overflow:hidden;backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);box-shadow:0 6px 24px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.10);transition:border-color .25s var(--ease),transform .25s var(--ease)}
+.tcell::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--acc-1),var(--acc-2));opacity:.7}
+.tcell:hover{border-color:rgba(255,255,255,.26);transform:translateY(-1px);box-shadow:0 10px 32px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.16)}
+.tcell .num{font-family:var(--mono);font-size:clamp(36px,6vw,58px);font-weight:700;color:var(--fg);line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-2px;position:relative;z-index:1;display:flex;justify-content:center;gap:2px}
+.tcell .num .digit{display:inline-block;transition:opacity .12s ease,transform .12s ease,color .12s ease}
+.tcell .num .digit.glitched{color:var(--acc-1);text-shadow:0 0 12px rgba(168,85,247,.8),0 0 24px rgba(168,85,247,.4);animation:glitch-flicker .18s steps(2,end) 3}
+@keyframes glitch-flicker{0%{opacity:1;transform:translateY(0)}50%{opacity:.65;transform:translateY(-1px)}100%{opacity:1;transform:translateY(0)}}
+.tcell .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--fg-mute);margin-top:12px;position:relative;z-index:1}
+.flags{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:24px}
+.flags th{text-align:left;font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);padding:10px 12px;border-bottom:1px solid var(--border);font-weight:500}
+.flags td{padding:10px 12px;border-bottom:1px dashed var(--border);vertical-align:top;color:var(--fg-soft)}
+.flags tr:last-child td{border-bottom:none}
+.flags td:first-child{font-family:var(--mono);color:var(--acc-2);white-space:nowrap;width:200px}
+.flags td code{background:var(--bg-soft);border:1px solid var(--border);padding:0 5px;border-radius:3px;color:var(--acc-2);font-size:.88em}
+.cta-row{margin-top:32px;display:flex;gap:12px;flex-wrap:wrap}
+.cta{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:.5px;text-decoration:none;border-radius:var(--r);transition:all .25s var(--ease);position:relative;overflow:hidden;color:#fff;border:1px solid rgba(255,255,255,.20);background:linear-gradient(135deg,rgba(0,0,0,.50) 0%,rgba(26,10,46,.40) 25%,rgba(76,29,149,.48) 55%,rgba(157,23,77,.42) 80%,rgba(0,0,0,.50) 100%);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);box-shadow:0 6px 26px rgba(88,28,135,.35),inset 0 1px 0 rgba(255,255,255,.18)}
+.cta:hover{border-color:rgba(255,255,255,.32);transform:translateY(-1px);color:#fff;box-shadow:0 10px 34px rgba(88,28,135,.50),inset 0 1px 0 rgba(255,255,255,.24)}
+.cta svg{width:16px;height:16px}
+.cta-ghost{color:var(--fg);border-color:rgba(255,255,255,.14);background:linear-gradient(135deg,rgba(0,0,0,.55) 0%,rgba(26,10,46,.45) 30%,rgba(76,29,149,.32) 55%,rgba(157,23,77,.28) 78%,rgba(0,0,0,.55) 100%);box-shadow:0 6px 24px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.10)}
+.cta-ghost:hover{color:var(--fg);border-color:rgba(168,85,247,.45);box-shadow:0 10px 32px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.16)}
+.done .tcell::before{background:linear-gradient(90deg,var(--ok),#22c55e)}
+.done .tcell .num{color:var(--ok)}
+@media (max-width:600px){.timer{grid-template-columns:repeat(2,1fr);gap:10px}.tcell{padding:20px 12px 16px}.flags td:first-child{width:auto;white-space:normal}}
+</style>
+</head>
+<body>
+<section class="section">
+  <div class="wrap">
+    <div class="section-head"><span class="num">00</span><h2>Релиз 2.0</h2><span class="meta">05.10.2026 &middot; 13:30 CEST</span></div>
+    <div class="intro"><p>Финальная сборка <strong>ASTRYM 2.0</strong> выходит <strong>5 октября 2026, 13:30 по Варшаве</strong>. Обратный отсчёт ниже.</p></div>
+    <div class="timer" id="timer">
+      <div class="tcell"><div class="num" data-unit="d">—</div><div class="lbl">Дней</div></div>
+      <div class="tcell"><div class="num" data-unit="h">—</div><div class="lbl">Часов</div></div>
+      <div class="tcell"><div class="num" data-unit="m">—</div><div class="lbl">Минут</div></div>
+      <div class="tcell"><div class="num" data-unit="s">—</div><div class="lbl">Секунд</div></div>
+    </div>
+    <table class="flags">
+      <thead><tr><th>Параметр</th><th>Значение</th></tr></thead>
+      <tbody>
+        <tr><td>Дата</td><td><code>05.10.2026</code></td></tr>
+        <tr><td>Время</td><td><code>13:30 CEST (UTC+2)</code></td></tr>
+        <tr><td>Часовой пояс</td><td><code>Europe/Warsaw</code></td></tr>
+        <tr><td>UTC</td><td><code>11:30 UTC</code></td></tr>
+      </tbody>
+    </table>
+    <div class="cta-row">
+      <a class="cta" href="https://github.com/mosadov/Astrym/releases/latest" target="_blank" rel="noopener">Скачать релиз</a>
+      <a class="cta cta-ghost" href="https://astrym.onrender.com/" target="_blank" rel="noopener">На главную</a>
+    </div>
+  </div>
+</section>
+<script>
+(function(){
+  var TARGET = Date.UTC(2026, 9, 5, 11, 30, 0);
+  var GLITCH_SETS = ["日本語文字仮名カナ","中文字符汉字","٠١٢٣٤٥٦٧٨٩","०१२३४५६७८९","๐๑๒๓๔๕๖๗๘๙","ͲͻϢϣϤϥϦϧ","𓀀𓁐𓂀𓃀𓄀𓅐𓆀𓇐","ＡＢＣＤＥＦＧＨ","אבגדהוזחט","ㅁㅂㅅㅇㅈㅊㅋ","₀₁₂₃₄₅₆₇₈₉","⁰¹²³⁴⁵⁶⁷⁸⁹","𝔸𝔹ℂ𝔻𝔼𝔽𝔾ℍ"];
+  var GLITCH_INTERVAL = 5000, GLITCH_DURATION = 8000, GLITCH_MIN = 3, GLITCH_MAX = 5;
+  var timer = document.getElementById("timer");
+  var nums = timer.querySelectorAll(".num");
+  var wrap = document.querySelector(".section");
+  var glitchEndAt = 0;
+  function pad(n){return n<10?"0"+n:""+n;}
+  function renderDigits(el,text){el.innerHTML="";for(var i=0;i<text.length;i++){var s=document.createElement("span");s.className="digit";s.textContent=text[i];s.dataset.real=text[i];el.appendChild(s);}}
+  function updateDigits(el,text){var spans=el.querySelectorAll(".digit");if(spans.length!==text.length){renderDigits(el,text);return;}for(var i=0;i<spans.length;i++){spans[i].dataset.real=text[i];if(!spans[i].classList.contains("glitched"))spans[i].textContent=text[i];}}
+  function randomGlitchChar(){var set=GLITCH_SETS[Math.floor(Math.random()*GLITCH_SETS.length)];var chars=Array.from(set);return chars[Math.floor(Math.random()*chars.length)];}
+  function startGlitch(){var all=timer.querySelectorAll(".digit");if(!all.length)return;var pool=Array.from(all);for(var i=pool.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=pool[i];pool[i]=pool[j];pool[j]=t;}var count=Math.min(pool.length,GLITCH_MIN+Math.floor(Math.random()*(GLITCH_MAX-GLITCH_MIN+1)));for(var k=0;k<count;k++){pool[k].classList.add("glitched");pool[k].textContent=randomGlitchChar();}glitchEndAt=Date.now()+GLITCH_DURATION;}
+  function stopGlitch(){timer.querySelectorAll(".digit.glitched").forEach(function(d){d.classList.remove("glitched");d.textContent=d.dataset.real||"0";});glitchEndAt=0;}
+  function tick(){var diff=TARGET-Date.now();if(diff<=0){stopGlitch();nums.forEach(function(n){updateDigits(n,"00");});if(!wrap.classList.contains("done")){wrap.classList.add("done");document.querySelector(".section-head h2").textContent="ASTRYM 2.0 вышел";document.querySelector(".intro p").innerHTML="Релиз <strong>ASTRYM 2.0</strong> доступен. Обновляйся и обновляй базы.";}return;}var totalSec=Math.floor(diff/1000);var vals=[pad(Math.floor(totalSec/86400)),pad(Math.floor((totalSec%86400)/3600)),pad(Math.floor((totalSec%3600)/60)),pad(totalSec%60)];["d","h","m","s"].forEach(function(u,i){var el=timer.querySelector('.num[data-unit="'+u+'"]');if(el)updateDigits(el,vals[i]);});if(glitchEndAt&&Date.now()>=glitchEndAt)stopGlitch();}
+  function scheduleGlitch(){if(Date.now()>=glitchEndAt)startGlitch();}
+  tick();setInterval(tick,1000);setInterval(scheduleGlitch,GLITCH_INTERVAL);setTimeout(startGlitch,800);
+})();
+</script>
+</body>
+</html>
