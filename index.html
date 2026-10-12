@@ -474,81 +474,11 @@ footer a:hover{color:var(--fg)}
 .btn svg{width:16px;height:16px}
 /* end R69 */
 
-/* R2.0: SOON overlay */
-#soon-overlay{
-  position:fixed;inset:0;z-index:9999;
-  display:none;
-  align-items:center;justify-content:center;
-  flex-direction:column;gap:24px;
-  background:rgba(10,10,11,.72);
-  backdrop-filter:blur(22px) saturate(120%);
-  -webkit-backdrop-filter:blur(22px) saturate(120%);
-}
-#soon-overlay.show{display:flex}
-#soon-overlay .soon-title{
-  font-family:var(--mono);
-  font-size:clamp(48px,12vw,140px);
-  font-weight:700;
-  letter-spacing:12px;
-  color:var(--fg);
-  opacity:.35;
-  text-transform:uppercase;
-  text-shadow:0 0 40px rgba(168,85,247,.35);
-  animation:soon-pulse 3.2s ease-in-out infinite;
-  user-select:none;
-}
-@keyframes soon-pulse{
-  0%,100%{opacity:.28;letter-spacing:12px}
-  50%{opacity:.5;letter-spacing:14px}
-}
-#soon-overlay .soon-sub{
-  font-family:var(--mono);
-  font-size:13px;
-  color:var(--fg-mute);
-  letter-spacing:2px;
-  text-transform:uppercase;
-}
-#soon-overlay .soon-cta{
-  font-family:var(--mono);
-  font-size:12.5px;
-  color:var(--acc-1);
-  padding:10px 18px;
-  border:1px solid rgba(168,85,247,.35);
-  border-radius:var(--r);
-  transition:all .25s var(--ease);
-  text-decoration:none;
-  letter-spacing:.5px;
-}
-#soon-overlay .soon-cta:hover{
-  background:rgba(168,85,247,.12);
-  border-color:var(--acc-1);
-  color:var(--fg);
-}
-#soon-overlay .soon-timer{
-  display:flex;gap:16px;
-  font-family:var(--mono);
-  font-size:clamp(20px,3vw,28px);
-  color:var(--fg);
-  letter-spacing:2px;
-}
-#soon-overlay .soon-timer span{opacity:.7}
 </style>
 
 
 </head>
 <body>
-<div id="soon-overlay">
-  <div class="soon-timer" id="soon-timer">
-    <span id="soon-d">00</span><span>:</span>
-    <span id="soon-h">00</span><span>:</span>
-    <span id="soon-m">00</span><span>:</span>
-    <span id="soon-s">00</span>
-  </div>
-  <div class="soon-title">Soon...</div>
-  <div class="soon-sub">Релиз 2.0 &middot; 05.10.2026 &middot; 13:30 CEST</div>
-  <a class="soon-cta" href="/release-time.html">Смотреть таймер &rarr;</a>
-</div>
-
 
 <nav class="nav">
   <div class="nav-inner">
@@ -790,6 +720,119 @@ python astrym.py domain github.com -x</div>
       <div class="cmd"><div class="cmd-name">check-updates <span class="args"></span></div><div class="cmd-body"><div class="desc">Проверка новых версий через GitHub API.</div><div class="ex">astrym.py check-updates</div></div></div>
       <div class="cmd"><div class="cmd-name">phone <span class="args">&lt;num&gt;</span></div><div class="cmd-body"><div class="desc">Разбор, страна, оператор, часовые пояса, мессенджеры.</div><div class="ex">astrym.py phone +79001234567</div></div></div>
       <div class="cmd"><div class="cmd-name">exif <span class="args">&lt;file&gt;</span></div><div class="cmd-body"><div class="desc">Метаданные файла через exiftool, GPS → в граф.</div><div class="ex">astrym.py exif photo.jpg</div></div></div>
+    </div>
+
+  </div>
+</section>
+
+<section class="section" id="hierarchy">
+  <div class="wrap">
+    <div class="section-head"><span class="num">02a</span><h2>Иерархия вывода</h2><span class="meta">плоский список → дерево</span></div>
+
+    <div class="intro" style="margin-bottom:24px">
+      <p>Во всей ASTRYM вывод в консоль, HTML, MD и XLSX теперь строится <strong>по иерархии</strong>: одна секция — один узел, вложенные значения — поддерево. Это не косметика: на больших целях (80+ субдоменов, 400+ CVE, 600+ источников утечек) плоский список превращается в кашу, а дерево остаётся читаемым.</p>
+      <p>Многострочные поля (<code>name_server</code>, <code>NS</code>, <code>MX</code>, <code>TXT</code>) автоматически разворачиваются в дерево с ограничением по глубине и подсчётом «... +N more». Вложенные dict и list-of-dict тоже рендерятся иерархически — единый стиль везде.</p>
+    </div>
+
+    <h3 style="font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--fg-mute);margin-bottom:12px">До и После · domain github.com</h3>
+
+    <div class="arch-row two" style="margin-top:20px">
+      <div>
+        <div class="report-frame-bar" style="border-radius:var(--r) var(--r) 0 0;border:1px solid var(--border);border-bottom:none">
+          <span style="color:var(--err)">ДО</span> · плоский список
+        </div>
+        <div class="term" style="margin-top:0;border-radius:0 0 var(--r) var(--r)">
+          <div class="term-body" style="font-size:11.5px">
+<span class="p">── WHOIS ──────────────────────────────</span>
+  registrar                MarkMonitor Inc.
+  creation date            2007-10-09
+  registry expiry date     2028-10-09
+  updated date             2026-10-11
+  name server              dns1.p08.nsone.net
+dns2.p08.nsone.net
+dns3.p08.nsone.net
+dns4.p08.nsone.net
+ns-1283.awsdns-32.org
+ns-1707.awsdns-21.co.uk
+ns-421.awsdns-52.com
+ns-520.awsdns-01.net
+  status                   client delete prohibited,client transfer prohibited,client update prohibited
+
+<span class="p">── DNS Records ────────────────────────</span>
+  A        20.233.83.145
+  MX       0 github-com.mail.protection.outlook.com.
+  NS       dns4.p08.nsone.net.
+           dns2.p08.nsone.net.                                ns-1283.awsdns-32.org.
+           ns-421.awsdns-52.com.
+  TXT      "google-site-verification=UTM-3akMgu..."                    "krisp-domain-verification=ZlyiK7XLhnaoUQb..."
+           "cursor-domain-verification=gtfwmt=..."
+           "openai-domain-verification=dv-3nh33eQw..."
+           <span class="d">... (ещё 20 строк без отступов)</span>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--fg-mute);margin-top:8px;line-height:1.5">
+          Многострочные поля ломают колонку. TXT слипается. Не видно, где кончается одно значение и начинается другое.
+        </div>
+      </div>
+
+      <div>
+        <div class="report-frame-bar" style="border-radius:var(--r) var(--r) 0 0;border:1px solid var(--border);border-bottom:none">
+          <span style="color:var(--ok)">ПОСЛЕ</span> · иерархия
+        </div>
+        <div class="term" style="margin-top:0;border-radius:0 0 var(--r) var(--r)">
+          <div class="term-body" style="font-size:11.5px">
+<span class="p">── WHOIS ──────────────────────────────</span>
+  registrar                MarkMonitor Inc.
+  creation date            2007-10-09
+  registry expiry date     2028-10-09
+  updated date             2026-10-11
+  name server              dns1.p08.nsone.net
+                           <span class="d">├─</span> dns2.p08.nsone.net
+                           <span class="d">├─</span> dns3.p08.nsone.net
+                           <span class="d">├─</span> dns4.p08.nsone.net
+                           <span class="d">├─</span> ns-1283.awsdns-32.org
+                           <span class="d">├─</span> ns-1707.awsdns-21.co.uk
+                           <span class="d">├─</span> ns-421.awsdns-52.com
+                           <span class="d">└─</span> ... +1 more
+  status                   client delete prohibited
+                           <span class="d">├─</span> client transfer prohibited
+                           <span class="d">└─</span> client update prohibited
+
+<span class="p">── DNS Records ────────────────────────</span>
+  A        20.233.83.145
+  MX       0 github-com.mail.protection.outlook.com.
+  NS       dns4.p08.nsone.net.
+           <span class="d">├─</span> dns2.p08.nsone.net.
+           <span class="d">├─</span> ns-1283.awsdns-32.org.
+           <span class="d">└─</span> ... +5 more
+  TXT      "google-site-verification=UTM-..."
+           <span class="d">├─</span> "krisp-domain-verification=Zlyi..."
+           <span class="d">├─</span> "cursor-domain-verification=..."
+           <span class="d">└─</span> ... +17 more
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--fg-mute);margin-top:8px;line-height:1.5">
+          Каждое значение — на своём уровне. Списки — дерево с обрезкой. Многострочные поля не ломают колонку.
+        </div>
+      </div>
+    </div>
+
+    <div class="read-block" style="margin-top:32px">
+      <h3>Что изменилось</h3>
+      <ul>
+        <li><b>WHOIS</b>, <b>DNS Records</b>, <b>Consensus</b>, <b>ASN</b>, <b>MX</b>, <b>TXT</b> — все многострочные поля теперь рендерятся через <code>tree_kv()</code>.</li>
+        <li><b>Дерево с обрезкой.</b> Список до 6 элементов — целиком, дальше — <code>... +N more</code>. Никаких 475 NS-записей на одном экране.</li>
+        <li><b>Вложенные dict</b> в XLSX-выгрузке раскрываются в отдельные секции (через новый <code>_dict_to_line</code>).</li>
+        <li><b>XposedOrNot</b> — теперь <code>20 из 484</code> + <code>+464 more</code> + ссылка на полный список.</li>
+        <li><b>Консенсус</b> — с многострочными альтернативами и подсветкой по confidence.</li>
+        <li><b>hr-email</b>, <b>identity</b>, <b>leakcheck</b> — заголовки с <code>computer_name</code> вместо <code>?</code>, даты в формате <code>YYYY-MM-DD</code>.</li>
+        <li><b>Команда <code>tree</code></b> — граф связей целиком в виде дерева: <code>tree github.com 2</code>. Параметр — глубина.</li>
+      </ul>
+    </div>
+
+    <div class="annot" style="margin-top:20px">
+      <strong>Единый визуальный язык</strong>
+      Все рендеры (консоль, HTML, MD, XLSX) используют одну и ту же логику иерархии. Если команда добавит новое поле — оно автоматически появится в дереве без ручной правки каждого формата.
     </div>
 
   </div>
@@ -1269,6 +1312,31 @@ python astrym.py domain github.com -f json,html,obsidian</pre>
 
 
     <!-- R14-R40 BLOCKS -->
+<div class="release">
+  <div class="rel-meta"><div class="tag">R42</div><div class="date">2026 &middot; иерархия вывода</div></div>
+  <div class="rel-body">
+    <h3>Единый визуальный язык: <code>tree_kv</code> для всех рендеров</h3>
+    <ul>
+      <li><code>tree_kv()</code> в <code>astrym_core</code> — иерархический KV-рендер для консоли, HTML, MD и XLSX. Раскрывает многострочные поля, list, list[dict] и вложенные dict в дерево с <code>├─</code> / <code>└─</code> и подсчётом <code>... +N more</code>.</li>
+      <li>WHOIS, DNS Records, MX, TXT, Consensus, ASN peers, Local Prefixes — все многострочные секции перешли на <code>tree_kv</code>.</li>
+      <li>Команда <code>tree &lt;target&gt; [depth]</code> — граф связей целиком в виде дерева. Depth теперь работает через <code>main()</code>, не теряется при разборе argv.</li>
+      <li>XposedOrNot: обрезка <code>20 из 484</code> + ссылка на полный список.</li>
+      <li><code>hr-email</code>, <code>identity</code>: заголовки с <code>computer_name</code>, даты в формате <code>YYYY-MM-DD</code>.</li>
+      <li><code>leakcheck</code>: dict → строка <code>Name   Date</code> вместо сырого Python-dict.</li>
+      <li><code>save_neo4j</code>: экспорт только окрестности цели (<code>target-subgraph</code>), размер .cypher уменьшился в 7.5 раз.</li>
+      <li>DNS resolver: DoH-fallback через MX-тест. На Android/Cloudflare-blocked сетях MX/NS/TXT теперь резолвятся.</li>
+      <li>Форматы: <code>-f console</code> больше не генерирует все 9 файлов; <code>-f all</code> явно; <code>_file_fmts</code> фильтруется по запросу.</li>
+      <li>CSV: split по секциям (<code>.csv.summary</code>, <code>.csv.dns</code>, <code>.csv.raw</code>) вместо плоского дампа.</li>
+      <li>WAF-detect: используем только релевантные заголовки — ложные <code>AWS WAF</code> / <code>Azure Front Door</code> из CSP-строк убраны.</li>
+      <li>Takeover: фикс URL-кодирования <code>%</code> в crt.sh, показывает CNAME + status + signature для каждой уязвимости.</li>
+      <li>SSL: разделены <code>Validity</code> (общая валидность) и <code>Expires in</code> (сколько осталось) — больше не путает.</li>
+      <li>SMTP: отказные статусы (<code>disconnected</code>, <code>timeout</code>, <code>greylisted</code>) идут в <code>muted</code>, а не <code>warn</code>.</li>
+      <li>Schedule: <code>schedule-add --cron "0 3 * * *"</code> работает — argv сохраняется, не режется по пробелам.</li>
+      <li>KNOWN_CMDS: убран мусор R41f/S11F, добавлены <code>schedule-*</code>, активирован <code>check-updates</code>.</li>
+    </ul>
+  </div>
+</div>
+
 <div class="release">
   <div class="rel-meta"><div class="tag">R68</div><div class="date">2026 &middot; локальные базы</div></div>
   <div class="rel-body">
@@ -2402,34 +2470,6 @@ bash ~/astrym-go.sh
       if(!hintDismissed) kbdHint.classList.remove("show");
     },4000);
   },800);
-})();
-</script>
-
-<script>
-(function(){
-  var TARGET = Date.UTC(2026, 9, 5, 11, 30, 0); // 05.10.2026 13:30 CEST
-  var overlay = document.getElementById("soon-overlay");
-  if (!overlay) return;
-  function pad(n){return n<10?"0"+n:""+n;}
-  function tick(){
-    var diff = TARGET - Date.now();
-    if (diff <= 0){
-      overlay.classList.remove("show");
-      return;
-    }
-    overlay.classList.add("show");
-    var sec = Math.floor(diff/1000);
-    var dEl = document.getElementById("soon-d");
-    var hEl = document.getElementById("soon-h");
-    var mEl = document.getElementById("soon-m");
-    var sEl = document.getElementById("soon-s");
-    if (dEl) dEl.textContent = pad(Math.floor(sec/86400));
-    if (hEl) hEl.textContent = pad(Math.floor((sec%86400)/3600));
-    if (mEl) mEl.textContent = pad(Math.floor((sec%3600)/60));
-    if (sEl) sEl.textContent = pad(sec%60);
-  }
-  tick();
-  setInterval(tick, 1000);
 })();
 </script>
 
